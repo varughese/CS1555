@@ -1,0 +1,73 @@
+\documentclass[12pt]{article}
+ 
+\usepackage[margin=1in]{geometry} 
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{enumitem} 
+
+\newcommand{\problem}[1]{
+	\vskip 1em
+	{\noindent \large \textbf{#1}}
+}
+
+\begin{document}
+
+\title{CS 1555 HW 2}
+\author{Mathew Varughese - mav120} 
+\date{Wednesday, Jan 29}
+
+\maketitle
+
+
+
+
+\problem{1.}
+
+Assuming cell phone is not null (There are no customers that would not have a cell phone number)
+
+
+\begin{verbatim}
+CUSTOMERS
+PK(SSN) ; UQ(cell_pn)
+FK(cell_pn) -> DIRECTORY(pn)
+FK(home_pn) -> DIRECTORY(pn)
+\end{verbatim}
+
+Assuming that you can SMS and Call at the same time stamp, which is why TYPE is 
+needed in the PK for RECORDS.
+I assume that whenever a call is made, this phone number will be added to the directory before a new record in the RECORDS table.
+
+\begin{verbatim}
+RECORDS
+PK(from_pn, to_pn, start_timestamp, type)
+FK(from_pn) -> DIRECTORY(pn)
+FK(to_pn) -> DIRECTORY(pn)
+\end{verbatim}
+
+
+\begin{verbatim}
+STATEMENTS
+PK(cell_pn, start_date, end_date)
+FK(cell_pn) -> DIRECTORY(pn)
+\end{verbatim}
+
+\begin{verbatim}
+PAYMENTS
+PK(cell_pn, paid_on, amount_paid)
+\end{verbatim}
+
+Assuming that phone number is unique in the DIRECTORY table. 
+For phone numbers that are home phone numbers, we only list the first name
+and last name of the owner of that home phone number. For example, in the sample data 
+4123121231 is the home phone number for Kate and Bill Stevenson, but in the directory this is
+only listed once. 
+
+\vskip 1em
+
+I assume that it is okay for the address in DIRECTORY table to be different than that in the CUSTOMERS table. This is because I assume this DIRECTORY has home addresses, whereas CUSTOMERS has billing addresses. Most of the time they are the same, but they can be different.  
+
+\begin{verbatim}
+DIRECTORY
+PK(pn)
+\end{verbatim}
+
+\end{document}
