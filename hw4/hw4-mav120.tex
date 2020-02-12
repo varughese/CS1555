@@ -1,0 +1,152 @@
+\documentclass[12pt]{article}
+ 
+\usepackage[margin=1in]{geometry} 
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{enumitem} 
+
+\begin{document}
+
+\title{CS 1555 HW 4}
+\author{Mathew Varughese - mav120} 
+\date{Wednesday, Feb 12}
+
+\maketitle
+
+\begin{enumerate}
+
+\item % 1
+
+\begin{enumerate}
+
+\item % a
+
+Arity = 1, Min = 1, Max = 1
+% $ \,_2F_1 $
+
+$ J \leftarrow \sigma_{start\_timestamp \geq '2019-08-01 \ 00:00:00' \land start\_timestamp < '2019-09-01 \ 00:00:00' } (RECORDS) $
+
+$ PA \leftarrow J \bowtie_{from\_pn = cell\_pn} (\sigma_{state='PA'} DIRECTORY) $
+
+$ RSLT \leftarrow F_{max(Duration)} PA $
+
+\item % b
+Arity = 2 (zip, avg(payment\_count)), Min = 0 (if there are no statements in Nov 2019), Max = 50 (50 different zip codes)
+
+$ S \leftarrow \sigma_{start\_date \geq '2019-11-01 \ 00:00:00' \land end\_date < '2019-12-01 \ 00:00:00' } (Statements) $
+
+$ R \leftarrow \Pi_{cell\_pn} S$
+
+$ COUNT(zip, payment\_count) \leftarrow _{zip}F_{count(cell\_pn)} R $
+
+$ RSLT \leftarrow _{zip}F_{avg(payment\_count)} $
+
+\item % c
+Arity = 2, Min = 0, Max = 25 (every customer could have 2 cell\_pns, so that 
+would mean 50/2, or 25 maximum cell\_pns)
+
+$ S(SSN, cell\_pn\_count) \leftarrow _{SSN}F_{count(cell\_pn)} $
+
+$ R \leftarrow \sigma_{cell\_pn\_count > 1} S $
+
+$ RSLT \leftarrow \Pi_{fname, lname} (R * Customers) $
+
+\item % d
+Assumption: If the there is only one Customer with a last name, we consider
+no one else in their family to be a customer of P\_Mobile
+
+Assumption: The count function does not count duplicates. For example, if there 
+are two SSNs that are the same, $COUNT(SSN)$ would return 1. 
+
+Arity = 1, Min = 0, Max = 50
+
+$ C(lname, count\_ssn) \leftarrow _{lname} F_{count(SSN)} Customers $
+
+$ RSLT \leftarrow \Pi_{lname} \ (\sigma_{count\_ssn = 1} C ) $
+
+\item % e
+Arity = 1, Min = 0, Max = 1
+
+This question is very vague, so I will assume that it is asking to find
+the sum of the charges for this customer.
+
+$ C \leftarrow \sigma_{cell\_pn = 4129876543 \ \land \ start\_date \ \geq \  '1-01-2019'} (Statements) $
+
+$ RSLT \leftarrow F_{sum(amount\_due)} C $
+
+
+\end{enumerate}
+
+\item % 2
+
+See next page
+
+
+\begin{table}[]
+	\caption{R}
+	\centering
+	\begin{tabular}{|l|l|l|l|}
+	\hline
+	\textbf{A} & \textbf{B} & \textbf{C} & \textbf{D} \\ \hline
+	0          & 0          & 0          & 1          \\ \hline
+	0          & 0          & 0          & 2          \\ \hline
+	0          & 0          & 0          & 3          \\ \hline
+	0          & 0          & 0          & 4          \\ \hline
+	0          & 0          & 0          & 5          \\ \hline
+	0          & 0          & 0          & 8          \\ \hline
+	0          & 0          & 0          & 9          \\ \hline
+	0          & 0          & 0          & 10         \\ \hline
+	0          & 0          & 0          & 11         \\ \hline
+	0          & 0          & 0          & 12         \\ \hline
+	0          & 0          & 0          & 13         \\ \hline
+	0          & 0          & 0          & 14         \\ \hline
+	0          & 0          & 0          & 15         \\ \hline
+	\end{tabular}
+	\end{table}
+
+
+
+\begin{table}[]
+	\caption{S}
+	\centering
+	\begin{tabular}{|l|l|l|}
+	\hline
+	\textbf{D} & \textbf{E} & \textbf{F} \\ \hline
+	1          & 0          & 0          \\ \hline
+	2          & 0          & 0          \\ \hline
+	3          & 0          & 0          \\ \hline
+	4          & 0          & 0          \\ \hline
+	5          & 0          & 0          \\ \hline
+	6          & 0          & 0          \\ \hline
+	7          & 0          & 0          \\ \hline
+	\end{tabular}
+	\end{table}
+
+\begin{table}[]
+	\caption{R right-outer-join(R.D = S.D) S}
+	\centering
+	\begin{tabular}{|l|l|l|l|l|l|l|}
+	\hline
+	\textbf{R.A} & \textbf{R.B} & \textbf{R.C} & \textbf{R.D} & \textbf{S.D} & \textbf{S.E} & \textbf{S.F} \\ \hline
+	0            & 0            & 0            & 1            & 1            & 0            & 0            \\ \hline
+	0            & 0            & 0            & 2            & 2            & 0            & 0            \\ \hline
+	0            & 0            & 0            & 3            & 3            & 0            & 0            \\ \hline
+	0            & 0            & 0            & 4            & 4            & 0            & 0            \\ \hline
+	0            & 0            & 0            & 5            & 5            & 0            & 0            \\ \hline
+	0            & 0            & 0            & 8            & null         & null         & null         \\ \hline
+	0            & 0            & 0            & 9            & null         & null         & null         \\ \hline
+	0            & 0            & 0            & 10           & null         & null         & null         \\ \hline
+	0            & 0            & 0            & 11           & null         & null         & null         \\ \hline
+	0            & 0            & 0            & 12           & null         & null         & null         \\ \hline
+	0            & 0            & 0            & 13           & null         & null         & null         \\ \hline
+	0            & 0            & 0            & 14           & null         & null         & null         \\ \hline
+	0            & 0            & 0            & 15           & null         & null         & null         \\ \hline
+	null         & null         & null         & null         & 6            & 0            & 0            \\ \hline
+	null         & null         & null         & null         & 7            & 0            & 0            \\ \hline
+	\end{tabular}
+	\end{table}
+
+
+
+\end{enumerate}
+
+\end{document}
