@@ -1,0 +1,57 @@
+SELECT CT.SID, COURSE_NO FROM
+STUDENT JOIN COURSE_TAKEN CT on STUDENT.SID = CT.SID
+WHERE MAJOR = 'CS'
+GROUP BY CT.SID, COURSE_NO
+HAVING COUNT(*) > 1;
+
+SELECT SID, NAME FROM STUDENT
+WHERE SID NOT IN
+      (SELECT SID
+       FROM COURSE_TAKEN
+       JOIN COURSE C2 on COURSE_TAKEN.COURSE_NO = C2.COURSE_NO
+       WHERE C2.NAME = 'Operating Systems' AND GRADE IS NOT NULL
+          );
+
+
+SELECT SID, NAME FROM STUDENT
+WHERE NOT EXISTS(
+    SELECT SID
+       FROM COURSE_TAKEN
+       JOIN COURSE C2 on COURSE_TAKEN.COURSE_NO = C2.COURSE_NO
+       WHERE C2.NAME = 'Operating Systems' AND GRADE IS NOT NULL
+    );
+
+SELECT s.SID, s.NAME
+FROM STUDENT s LEFT OUTER JOIN (
+    SELECT SID, COURSE_NO FROM COURSE_TAKEN
+    NATURAL JOIN COURSE WHERE NAME = 'Operating Systems') os_taking
+    ON s.SID = os_taking.SID
+WHERE COURSE_NO is null;
+
+SELECT S.SID, S.NAME, AVG(GRADE) as GPA
+FROM STUDENT S JOIN COURSE_TAKEN CT on S.SID = CT.SID
+GROUP BY S.SID, S.NAME
+ORDER BY AVG(GRADE) DESC
+FETCH FIRST 5 ROWS ONLY;
+
+
+CREATE OR REPLACE VIEW student_courses AS
+SELECT s.SID, s.name, COUNT(COURSE_NO) AS num_courses
+FROM STUDENT s, COURSE_TAKEN ct
+WHERE s.SID = ct.SID
+GROUP BY  s.SID, s.name;
+
+DROP MATERIALIZED VIEW mv_student_courses;
+CREATE MATERIALIZED VIEW mv_student_courses AS
+    SELECT s.SID, s.name, COUNT(COURSE_NO) AS num_courses
+    FROM STUDENT s, COURSE_TAKEN ct
+    WHERE s.SID = ct.SID
+    GROUP BY  s.SID, s.name;
+
+insert into course_taken (course_no, sid, term, grade)
+values ('CS1555', '129','Fall 19', null);
+commit;
+
+select * from mv_student_courses;
+
+select * from student_courses;

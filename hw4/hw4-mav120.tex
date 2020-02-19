@@ -66,12 +66,15 @@ $ RSLT \leftarrow \Pi_{lname} \ (\sigma_{count\_ssn = 1} C ) $
 \item % e
 Arity = 1, Min = 0, Max = 1
 
-This question is very vague, so I will assume that it is asking to find
-the sum of the charges for this customer.
+This question is vague, so I will assume that it is asking to find
+the sum of the minutes and sms for this customer in this time period, and then 
+I assume you can use arithmetic in relational algebra. 
 
 $ C \leftarrow \sigma_{cell\_pn = 4129876543 \ \land \ start\_date \ \geq \  '1-01-2019'} (Statements) $
 
-$ RSLT \leftarrow F_{sum(amount\_due)} C $
+$ T \leftarrow F_{sum(total\_minutes), sum(total\_SMS)} C $
+
+$ RSLT = \Pi_{charges=(0.25 * total\_minutes + 0.05 * total\_SMS)/100} T$
 
 
 \end{enumerate}
@@ -122,7 +125,7 @@ See next page
 	\end{table}
 
 \begin{table}[]
-	\caption{R right-outer-join(R.D = S.D) S}
+	\caption{R full-outer-join(R.D = S.D) S}
 	\centering
 	\begin{tabular}{|l|l|l|l|l|l|l|}
 	\hline
