@@ -229,16 +229,16 @@ BEGIN
 END;
 
 -- This shows that the TOTAL_MINUTES is incorrect
-select from_pn, to_pn, start_timestamp from RECORDS;
-select cell_pn, total_minutes from STATEMENTS;
-
-select from_pn, cell_pn, SUM(duration), total_minutes from RECORDS
-JOIN STATEMENTS on RECORDS.from_pn = STATEMENTS.cell_pn
-group by from_pn, cell_pn, total_minutes;
-
-select * from records where to_pn = 4121231231 AND start_timestamp >= TO_DATE('01-AUG-2019') AND start_timestamp <= TO_DATE('31-AUG-2019');
--- this shows the total minutes is 250
-select * from STATEMENTS where cell_pn = 4121231231;
+-- select from_pn, to_pn, start_timestamp from RECORDS;
+-- select cell_pn, total_minutes from STATEMENTS;
+--
+-- select from_pn, cell_pn, SUM(duration), total_minutes from RECORDS
+-- JOIN STATEMENTS on RECORDS.from_pn = STATEMENTS.cell_pn
+-- group by from_pn, cell_pn, total_minutes;
+--
+-- select * from records where to_pn = 4121231231 AND start_timestamp >= TO_DATE('01-AUG-2019') AND start_timestamp <= TO_DATE('31-AUG-2019');
+-- -- this shows the total minutes is 250
+-- select * from STATEMENTS where cell_pn = 4121231231;
 ---------------------------------------------
 -- Question #10:
 -- A)
