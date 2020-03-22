@@ -3,3 +3,5 @@
 *.synctex.gz
 *.fls
 *.log
+.idea/
+

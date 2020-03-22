@@ -1,16 +1,7 @@
--- Mathew Varughese
--- MAV120
 
--- 1a Add a new attribute to the relation PAYMENTS called ‘payer SSN’ of type number(9).
-ALTER TABLE PAYMENTS add payer_SSN number(9);
-
--- 1b Add a foreign key constraint to the relation PAYMENTS on the newly created attribute
--- payer SSN’, and make it references the attribute ‘SSN’ in the relation CUSTOMERS.
-ALTER TABLE PAYMENTS add Constraint payments_customer_ssn_fk FOREIGN KEY(payer_SSN) REFERENCES CUSTOMERS(SSN);
-
-
--- 2
-
+----------------------------------------
+--- Sample solution for Question #4  ---
+----------------------------------------
 INSERT INTO DIRECTORY values(4121231231, 'Michael', 'Johnson'  , '320 Fifth Avenue'  , 'Pittsburgh'   ,15213, 'PA');
 INSERT INTO DIRECTORY values(4121232131, 'Michael', 'Johnson'  , '320 Fifth Avenue'  , 'Pittsburgh'   ,15213, 'PA');
 INSERT INTO DIRECTORY values(4124564564, 'Kate'   , 'Stevenson', '310 Fifth Avenue'  , 'Pittsburgh'   ,15213, 'PA');
@@ -81,8 +72,19 @@ INSERT INTO STATEMENTS values(4846235161, '01-Sep-19','30-Sep-19', 200,	83, 100,
 INSERT INTO STATEMENTS values(4846452231, '01-Sep-19','30-Sep-19', 500, 12, 59.99, 179.99);
 
 
-INSERT INTO PAYMENTS values(4121231231, '05-Aug-19', 39.99, 123456789);
-INSERT INTO PAYMENTS values(4121231231, '04-Sep-19', 39.99, 123456789);
-INSERT INTO PAYMENTS values(4124564564, '03-Aug-19', 100, 123232343);
-INSERT INTO PAYMENTS values(4127897897, '06-Aug-19', 39.99, 445526754);
-INSERT INTO PAYMENTS values(4127417417, '06-Aug-19', 10.00, 254678898);
+INSERT INTO PAYMENTS values(4121231231, '05-Aug-19', 39.99);
+INSERT INTO PAYMENTS values(4121231231, '04-Sep-19', 39.99);
+INSERT INTO PAYMENTS values(4124564564, '03-Aug-19', 100);
+INSERT INTO PAYMENTS values(4127897897, '06-Aug-19', 39.99);
+INSERT INTO PAYMENTS values(4127417417, '06-Aug-19', 10.00);
+
+----------------------------------------
+--- Sample solution for Question #5  ---
+----------------------------------------
+SELECT * FROM RECORDS;
+SELECT * FROM STATEMENTS;
+SELECT * FROM PAYMENTS;
+SELECT * FROM CUSTOMERS;
+SELECT * FROM DIRECTORY;
+
+COMMIT;
