@@ -11,6 +11,11 @@ DROP TABLE PAYMENTS CASCADE CONSTRAINTS;
 DROP TABLE CUSTOMERS CASCADE CONSTRAINTS;
 DROP TABLE DIRECTORY CASCADE CONSTRAINTS;
 
+DROP TABLE COMP_BILL CASCADE CONSTRAINTS;
+DROP TABLE COMPANY CASCADE CONSTRAINTS;
+DROP MATERIALIZED VIEW MV_COMPANY_LATEST_DUE;
+
+
 CREATE TABLE DIRECTORY(
 pn      number(10)       not null,
 fname   varchar2(20)    not null,
@@ -90,8 +95,6 @@ Purge recyclebin;
 
 ---------------------------------------------
 -- Question #2:
-DROP TABLE COMPANY CASCADE CONSTRAINTS;
-
 CREATE TABLE COMPANY(
     comp_ID number not null,
     comp_name varchar2(20) not null,
@@ -105,7 +108,6 @@ CREATE TABLE COMPANY(
 
 ---------------------------------------------
 -- Question #3:
-DROP TABLE COMP_BILL CASCADE CONSTRAINTS;
 
 CREATE TABLE COMP_BILL(
     comp_ID number not null,
@@ -188,7 +190,7 @@ WHERE start_date >= TO_DATE('01-APR-2019') AND end_date <= TO_DATE('31-JUL-2019'
 ---------------------------------------------
 -- Question #9:
 -- A)
-CREATE OR REPLACE VIEW V_COMPANY_LATEST_DUE AS
+CREATE MATERIALIZED VIEW MV_COMPANY_LATEST_DUE AS
 SELECT COMPANY.COMP_ID, AMOUNT_DUE
 FROM COMPANY JOIN (
 SELECT c.comp_ID, amount_due FROM
@@ -198,15 +200,17 @@ ON COMPANY.comp_ID = LATEST_COMP_BILL.comp_ID;
 
 
 CREATE OR REPLACE TRIGGER DISPLAY_LATEST_DUES
-BEFORE UPDATE OF charge_rate ON COMPANY
-FOR EACH ROW
+    AFTER UPDATE OF charge_rate ON COMPANY
+    FOR EACH ROW
 DECLARE
-    latest_amount_due NUMBER;
+    latest_amount_due number;
 BEGIN
-
-    SELECT amount_due INTO latest_amount_due FROM V_COMPANY_LATEST_DUE WHERE comp_ID = new.comp_ID;
-    DBMS_OUTPUT.PUT_LINE(latest_amount_due);
+    SELECT amount_due INTO latest_amount_due
+    FROM MV_COMPANY_LATEST_DUE
+    WHERE comp_ID = :new.comp_ID;
+    DBMS_OUTPUT.PUT_LINE('Latest amount due for company ' || :new.comp_ID || ': ' || latest_amount_due);
 END;
+
 
 -- B)
 CREATE OR REPLACE VIEW V_LATEST_STATEMENT AS
@@ -219,31 +223,51 @@ LEFT JOIN STATEMENTS s ON s.cell_pn = max_end_dates.cell_pn AND s.end_date = max
 CREATE OR REPLACE TRIGGER BILLING
 AFTER INSERT ON RECORDS
 FOR EACH ROW
-WHEN (new.type = 'call')
+WHEN (new.type = 'CALL')
 DECLARE
-    latest_start_date date
+    latest_start_date date;
 BEGIN
+    select start_date into latest_start_date from V_LATEST_STATEMENT WHERE cell_pn = :new.from_pn;
     update STATEMENTS
-        set total_minutes = total_minutes + new.duration
-    where cell_pn = new.from_pn
+        set total_minutes = total_minutes + :new.duration
+    where cell_pn = :new.from_pn AND start_date = latest_start_date;
+    select start_date into latest_start_date from V_LATEST_STATEMENT WHERE cell_pn = :new.to_pn;
+    update STATEMENTS
+        set total_minutes = total_minutes + :new.duration
+    where cell_pn = :new.to_pn AND start_date = latest_start_date;
 END;
 
--- This shows that the TOTAL_MINUTES is incorrect
--- select from_pn, to_pn, start_timestamp from RECORDS;
--- select cell_pn, total_minutes from STATEMENTS;
---
--- select from_pn, cell_pn, SUM(duration), total_minutes from RECORDS
--- JOIN STATEMENTS on RECORDS.from_pn = STATEMENTS.cell_pn
--- group by from_pn, cell_pn, total_minutes;
---
--- select * from records where to_pn = 4121231231 AND start_timestamp >= TO_DATE('01-AUG-2019') AND start_timestamp <= TO_DATE('31-AUG-2019');
--- -- this shows the total minutes is 250
--- select * from STATEMENTS where cell_pn = 4121231231;
 ---------------------------------------------
 -- Question #10:
 -- A)
-
+CREATE OR REPLACE PROCEDURE PROC_UPDATE_CHARGE_RATE(input_comp_id number, rate_charge number) AS
+BEGIN
+    UPDATE COMPANY
+        set charge_rate = rate_charge
+    WHERE comp_ID = input_comp_id;
+END;
 
 
 ---------------------------------------------
 -- Question #11:
+-- A)
+SELECT * FROM COMPANY;
+
+set transaction read write;
+set constraints all deferred;
+call PROC_UPDATE_CHARGE_RATE(2, 0.33);
+commit;
+
+SELECT * FROM COMPANY;
+
+-- B)
+SELECT * FROM RECORDS;
+
+INSERT INTO RECORDS
+VALUES (4121231231, 4843504021, TO_TIMESTAMP('27-AUG-19:22:12', 'DD-MON-RR:HH24:MI'), 301, 'CALL');
+INSERT INTO RECORDS
+VALUES (4122582582, 4121231231, TO_TIMESTAMP('28-AUG-19:22:12', 'DD-MON-RR:HH24:MI'), 134, 'CALL');
+
+SELECT * FROM RECORDS;
+
+SELECT * FROM STATEMENTS;
