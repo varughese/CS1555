@@ -128,13 +128,14 @@ ALTER TABLE DIRECTORY modify comp_ID NOT NULL;
 
 ---------------------------------------------
 -- Question #5:
-ALTER TABLE COMPANY add charge_rate number;
+ALTER TABLE COMPANY add charge_rate number(6, 2);
 ALTER TABLE COMPANY modify charge_rate default 0.20;
 ALTER TABLE COMPANY add Constraint company_positive_charge_rate CHECK (charge_rate >= 0) INITIALLY IMMEDIATE DEFERRABLE;
 
 ---------------------------------------------
 -- Question #6:
 ALTER TABLE COMP_BILL add Constraint end_date_gt_start_date CHECK(end_date > start_date) INITIALLY IMMEDIATE DEFERRABLE;
+ALTER TABLE STATEMENTS add Constraint statement_end_date_gt_start_date CHECK(end_date > start_date) INITIALLY IMMEDIATE DEFERRABLE;
 
 ---------------------------------------------
 -- Question #7:
@@ -149,44 +150,40 @@ COMMIT;
 ---------------------------------------------
 -- Question #8:
 -- A)
-CREATE OR REPLACE VIEW V_OUTSTANDING_BAL(full_name, cell_pn, city, balance)
-AS
-SELECT C.fname || ' ' || C.lname,
+SELECT C.fname || ' ' || C.lname as full_name,
        C.cell_pn,
        C.city,
        CASE
-           WHEN total_due IS NULL AND total_paid IS NOT NULL THEN -total_paid
-           WHEN total_paid IS NULL AND total_due IS NOT NULL THEN total_due
-           WHEN (total_due - total_paid) IS NULL THEN 0
-           ELSE (total_due - total_paid) END AS balance
-FROM CUSTOMERS C
-         LEFT OUTER JOIN
-     (SELECT C1.cell_pn, SUM(amount_due) AS total_due, SUM(amount_paid) AS total_paid
-      FROM CUSTOMERS C1
-               LEFT JOIN PAYMENTS P ON C1.cell_pn = P.cell_pn
-               JOIN STATEMENTS S ON C1.cell_pn = S.cell_pn
-      GROUP BY C1.cell_pn
-     ) CTDP ON C.cell_pn = CTDP.cell_pn
-ORDER BY balance DESC;
+           WHEN city = 'Pittsburgh' THEN S.amount_due - 20
+           WHEN city = 'Philadelphia' THEN S.amount_due - 15
+           ELSE S.amount_due END AS amount_due
+FROM CUSTOMERS C JOIN STATEMENTS S on C.cell_pn = S.cell_pn;
 
-select full_name, cell_pn,
-       CASE
-           WHEN city = 'Pittsburgh' THEN balance - 20
-           WHEN city = 'Philadelphia' THEN balance - 15
-           ELSE balance END AS balance
-       from V_OUTSTANDING_BAL;
 
 -- B)
 
 SELECT comp_name, state,
        CASE
-            WHEN state = 'PA' AND comp_name != 'P_Mobile' AND (charge_rate - 0.05 < 0) THEN total_minutes * 0.01
-            WHEN state = 'PA' AND comp_name != 'P_Mobile' THEN total_minutes * (charge_rate - 0.05)
-            WHEN state != 'PA' THEN total_minutes * (charge_rate + 0.10)
+            WHEN state = 'PA' AND comp_name != 'P_Mobile' AND (MIN(charge_rate) - 0.05 < 0) THEN SUM(total_minutes * 0.01)
+            WHEN state = 'PA' AND comp_name != 'P_Mobile' THEN SUM(total_minutes * (charge_rate - 0.05))
+            WHEN state != 'PA' THEN SUM(total_minutes * (charge_rate + 0.10))
+            ELSE SUM(amount_due)
             END AS new_amount_due
-FROM
-COMP_BILL JOIN COMPANY on COMP_BILL.comp_ID = COMPANY.comp_ID
-WHERE start_date >= TO_DATE('01-APR-2019') AND end_date <= TO_DATE('31-JUL-2019');
+FROM COMP_BILL JOIN COMPANY on COMP_BILL.comp_ID = COMPANY.comp_ID
+WHERE start_date >= TO_DATE('01-APR-2019') AND end_date <= TO_DATE('31-JUL-2019')
+GROUP BY comp_name, state
+UNION
+SELECT 'P_Mobile', 'PA', 0.0
+FROM COMPANY;
+
+
+-- SELECT comp_name, state,
+--        CASE
+--             WHEN state = 'PA' AND comp_name != 'P_Mobile' AND (charge_rate - 0.05 < 0) THEN SUM(total_minutes * 0.01)
+-- END AS new_amount_due
+-- FROM COMP_BILL JOIN COMPANY on COMP_BILL.comp_ID = COMPANY.comp_ID
+-- WHERE start_date >= TO_DATE('01-APR-2019') AND end_date <= TO_DATE('31-JUL-2019')
+-- GROUP BY comp_name, state, ;
 ---------------------------------------------
 -- Question #9:
 -- A)

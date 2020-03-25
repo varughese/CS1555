@@ -1,6 +1,28 @@
+# 8
+# a)
+Michael Johnson	4121231231	Pittsburgh	19.99
+Kate Stevenson	4124564564	Pittsburgh	279.99
+Bill Stevenson	4127897897	Pittsburgh	39.99
+Richard Hurson	4127417417	Pittsburgh	29.99
+Mary Davis	4122582582	Pittsburgh	119.99
+Frank Shaw	4843504021	Allentown	59.99
+Jones Steward	7248889898	Philadelphia	10.99
+James Sam	7249879879	Philadelphia	144.99
+Liam Allen	4846235161	Allentown	199.99
+Justin Blosser	4846452231	Allentown	179.99
+
+# b)
+D_Mobile	PA	2761.35
+D_tele	PA	2761.35
+H_tele	PA	2761.35
+K_tele	PA	3389.4
+L_tele	WV	16568.1
+M_Mobile	PA	3389.4
+M_tele	PA	3389.4
+P_Mobile	PA	0
+
 # 11
 # a)
-MAV120> SELECT * FROM COMPANY
 9	Q_Mobile	1111 Fifth Ave	Pittsburgh	15213	PA	0.1
 1	P_Mobile	210 Sennott Square	Pittsburgh	15260	PA	0
 2	K_tele	22 2nd Ave	Philadelphia	22222	PA	0.15
