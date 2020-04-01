@@ -1,0 +1,256 @@
+\documentclass[12pt]{article}
+ 
+\usepackage[margin=1in]{geometry} 
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{graphicx}
+\usepackage{enumitem} 
+
+\begin{document}
+
+\title{CS 1555 HW 8}
+\author{Mathew Varughese - mav120} 
+\date{Wednesday, Apr 1}
+
+\maketitle
+
+\begin{enumerate}
+
+\item % 1
+
+\begin{enumerate}
+
+\item % 1a
+
+Primary Keys are ItemId and PurchaceId. These are 
+the ones that do not appear on the left hand side
+
+
+I will find these using the universal relational approach.
+
+
+Using ItemId $\rightarrow$ ItemDescription, 
+
+\hspace{10mm} R1(\underline{ItemId}, \underline{PurchaceId}, PurchaceDate, VendorCode, VendorName, VendorAddress, OrderQuantity, ItemPrice, StockQuantity)
+
+\hspace{10mm} R2(\underline{ItemId}, ItemDescription)
+
+\vskip 12pt
+
+Using ItemId $\rightarrow$ ItemPrice
+
+\hspace{10mm} R11(\underline{ItemId}, \underline{PurchaceId}, PurchaceDate, VendorCode, VendorName, VendorAddress, OrderQuantity, StockQuantity)
+
+\hspace{10mm} R12(\underline{ItemId}, ItemPrice)
+
+\vskip 12pt
+
+Using ItemId $\rightarrow$ StockQuantity
+
+\hspace{10mm} R111(\underline{ItemId}, \underline{PurchaceId}, PurchaceDate, VendorCode, VendorName, VendorAddress, OrderQuantity)
+
+\hspace{10mm} R112(\underline{ItemId}, StockQuantity)
+
+\vskip 12pt
+
+Using PurchaceId $\rightarrow$ PurchaceDate
+
+\hspace{10mm} R1111(\underline{ItemId}, \underline{PurchaceId}, VendorCode, VendorName, VendorAddress, OrderQuantity)
+
+\hspace{10mm} R1112(\underline{PurchaceId}, PurchaceDate)
+
+\vskip 12pt
+
+Using PurchaceId $\rightarrow$ VendorCode
+
+\hspace{10mm} R11111(\underline{ItemId}, \underline{PurchaceId}, VendorName, VendorAddress, OrderQuantity)
+
+\hspace{10mm} R11112(\underline{PurchaceId}, VendorCode)
+
+\vskip 12pt
+
+Using VendorCode $\rightarrow$ VendorName
+
+\hspace{10mm} R111111(\underline{ItemId}, \underline{PurchaceId}, VendorAddress, OrderQuantity)
+
+\hspace{10mm} R111112(\underline{VendorCode}, VendorName)
+
+\vskip 12pt
+
+Using VendorCode $\rightarrow$ VendorAddress
+
+\hspace{10mm} R1111111(\underline{ItemId}, \underline{PurchaceId}, OrderQuantity)
+
+\hspace{10mm} R1111112(\underline{VendorCode}, VendorAddress)
+
+\vskip 12pt
+
+So, our relations are 
+
+R1(\underline{ItemId}, \underline{PurchaceID}, OrderQuantity)
+
+R2(\underline{VendorCode}, VendorName, VendorAddress)
+
+R3(\underline{PurchaceID}, PurchaceDate, VendorCode)
+
+R4(\underline{ItemId}, ItemDescription, ItemPrice, StockQuantity)
+
+\item % 1b
+\vskip 12pt
+This composition is good, because each table depends on the primary key and nothing but that key. The construction is indeed lossless, as R1 has access to old attributes.
+\begin{table}[h]
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|l|l|l|l|l|l|l|l|l|l|l|}
+\hline
+  & ItemId & ItemDesc & ItemPrice & StockQuantity & PurchaceId & PurchaceDate & VendorCode & VendorName & VendorAddress & OrderQuantity &  \\ \hline
+R1 & A1 & A2 & A3 & A4 & A5 & A6 & A7 & A8 & A9 & A10 \\ \hline
+R2 & U  & U  & U  & U  & U  & U  & A7 & A8 & A9 & U   \\ \hline
+R3 & U  & U  & U  & U  & A5 & A6 & A7 & A8 & A9 & U   \\ \hline
+R4 & A1 & A2 & A3 & A4 & U  & U  & U  & U  & U  & U   \\ \hline
+\end{tabular}}
+\caption{This is the table to check for lossless join created by applying each functional decomp}
+\label{tab:oneb}
+\end{table}
+
+\end{enumerate}
+
+
+\item % 2
+
+\begin{enumerate}
+
+\item % 2a
+
+A $\rightarrow$ B
+
+B $\rightarrow$ CD
+
+A $\rightarrow$ D
+
+B $\rightarrow$ C
+
+AB $\rightarrow$ CD
+
+A $\rightarrow$ C
+
+E $\rightarrow$ F
+
+\hrulefill
+
+Transform all FDs to canonical form
+
+A $\rightarrow$ B
+
+B $\rightarrow$ C
+
+B $\rightarrow$ D
+
+A $\rightarrow$ D
+
+B $\rightarrow$ C
+
+AB $\rightarrow$ C
+
+AB $\rightarrow$ D
+
+A $\rightarrow$ C
+
+E $\rightarrow$ F
+
+\hrulefill
+
+Remove Redudancies
+
+A $\rightarrow$ B
+
+B $\rightarrow$ C
+
+B $\rightarrow$ D
+
+A $\rightarrow$ D
+
+B $\rightarrow$ C
+
+AB $\rightarrow$ C
+
+AB $\rightarrow$ D
+
+A $\rightarrow$ C
+
+E $\rightarrow$ F
+
+\hrulefill
+
+Drop Extraneous attributes
+
+A $\rightarrow$ B
+
+B $\rightarrow$ C
+
+B $\rightarrow$ D
+
+E $\rightarrow$ F
+
+\hrulefill
+
+Finding keys. A, E does not appear in right hand keys, so it must appear in all keys.
+
+AE+ : AE $\rightarrow$ AEB $\rightarrow$ AEBC  $\rightarrow$ AEBCDF
+
+So key is AE. 
+
+\hrulefill
+
+Group FDs with same determinant
+
+A $\rightarrow$ B
+
+B $\rightarrow$ CD
+
+E $\rightarrow$ F
+
+\hrulefill
+
+Construct relation 
+
+R1 (\underline{A}, B)
+
+R2 (\underline{B}, C, D)
+
+R3 (\underline{E}, F)
+
+
+\hrulefill
+
+If none of the relations contain the key for the original relation add a relation with the key.
+
+R1 (\underline{A}, B)
+
+R2 (\underline{B}, C, D)
+
+R3 (\underline{E}, F)
+
+R4 (\underline{A}, \underline{E})
+
+\pagebreak
+
+\item % 2b 
+
+This is lossless because it covers all attributes
+
+\begin{table}[h]
+	\centering
+	\begin{tabular}{|l|l|l|l|l|l|l|}
+	\hline
+	  & A  & B  & C  & D  & E  & F  \\ \hline
+	R1 & A1 & A2 & A3 & A4 & U  & U  \\ \hline
+	R2 & U  & A2 & A3 & A4 & U  & U  \\ \hline
+	R3 & U  & U  & U  & U  & A5 & A6 \\ \hline
+	R4 & A1 & A2 & A3 & A4 & A5 & A6 \\ \hline
+	\end{tabular}
+	\end{table}
+	
+\end{enumerate}
+
+\end{enumerate}
+
+\end{document}
