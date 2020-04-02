@@ -9,6 +9,7 @@ import requests
 import argparse
 
 parser = argparse.ArgumentParser(description='Convert from Google Spreadsheet to SQL INSERTS.')
+# To prevent Google from thinking you are webscraping, you have to File -> CSV at least once, and then run this script.
 parser.add_argument('-f', '--fetch', help='Download the Sheets from online', default=False, action="store_true")
 parser.add_argument('-c', '--cache', help='Cache the downloaded sheets', default=False, action="store_true")
 
