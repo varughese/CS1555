@@ -79,7 +79,7 @@ CREATE TABLE TEAM(
     CONSTRAINT fk_team_olympic_id FOREIGN KEY (olympic_id) REFERENCES OLYMPICS(olympic_id),
     CONSTRAINT fk_team_country_id FOREIGN KEY (country_id) REFERENCES COUNTRY(country_id),
     CONSTRAINT fk_team_sport_id FOREIGN KEY (sport_id) REFERENCES SPORT(sport_id),
-    CONSTRAINT fk_team_coach_id FOREIGN KEY (coach_id) REFERENCES USER_ACCOUNT(user_id)
+    CONSTRAINT fk_team_coach_id FOREIGN KEY (coach_id) REFERENCES PARTICIPANT(participant_id)
 );
 
 -- CREATE TEAM MEMBER TABLE
@@ -109,7 +109,7 @@ CREATE TABLE EVENT(
     event_time date,
     CONSTRAINT fk_event_sport_id FOREIGN KEY (sport_id) REFERENCES SPORT(sport_id),
     CONSTRAINT fk_event_venue_id FOREIGN KEY (venue_id) REFERENCES VENUE(venue_id),
-    CHECK (gender IN (0, 1))
+    CHECK (gender IN ('m', 'f'))
 );
 
 -- CREATE EVENT_PARTICIPATION TABLE

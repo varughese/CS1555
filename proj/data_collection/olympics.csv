@@ -1,0 +1,5 @@
+olympic_id,olympic_num,host_city,opening_date,closing_date,official_website
+3,XXXI,Rio de Janeiro,05-Aug-16,21-Aug-16,https://www.olympic.org/rio-2016
+2,XXX,London,27-Jul-12,12-Aug-12,https://www.olympic.org/london-2012
+1,XXIX,Beijing,08-Aug-08,24-Aug-08,https://www.olympic.org/beijing-2008
+0,XXVIII,Athens,13-Aug-04,29-Aug-04,https://www.olympic.org/athens-2004

@@ -84,9 +84,17 @@ Using VendorCode $\rightarrow$ VendorAddress
 
 \vskip 12pt
 
+Using ItemId $\rightarrow$ OrderQuantity
+
+\hspace{10mm} R11111111(\underline{ItemId}, \underline{PurchaceId})
+
+\hspace{10mm} R11111112(\underline{ItemId}, OrderQuantity)
+
+\vskip 12pt
+
 So, our relations are 
 
-R1(\underline{ItemId}, \underline{PurchaceID}, OrderQuantity)
+R1(\underline{ItemId}, \underline{PurchaceID})
 
 R2(\underline{VendorCode}, VendorName, VendorAddress)
 
@@ -94,9 +102,11 @@ R3(\underline{PurchaceID}, PurchaceDate, VendorCode)
 
 R4(\underline{ItemId}, ItemDescription, ItemPrice, StockQuantity)
 
+R5(\underline{ItemId}, OrderQuantity)
+
 \item % 1b
 \vskip 12pt
-This composition is good, because each table depends on the primary key and nothing but that key. The construction is indeed lossless, as R1 has access to old attributes.
+This composition is good, because each table depends on the primary key and nothing but that key. The construction is indeed lossless, as R1 has access to all attributes.
 \begin{table}[h]
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{|l|l|l|l|l|l|l|l|l|l|l|l|}
@@ -106,6 +116,7 @@ R1 & A1 & A2 & A3 & A4 & A5 & A6 & A7 & A8 & A9 & A10 \\ \hline
 R2 & U  & U  & U  & U  & U  & U  & A7 & A8 & A9 & U   \\ \hline
 R3 & U  & U  & U  & U  & A5 & A6 & A7 & A8 & A9 & U   \\ \hline
 R4 & A1 & A2 & A3 & A4 & U  & U  & U  & U  & U  & U   \\ \hline
+R5 & A1 & A2 & A3 & A4 & U  & U  & U  & U  & U  & A10   \\ \hline
 \end{tabular}}
 \caption{This is the table to check for lossless join created by applying each functional decomp}
 \label{tab:oneb}
@@ -231,7 +242,6 @@ R3 (\underline{E}, F)
 
 R4 (\underline{A}, \underline{E})
 
-\pagebreak
 
 \item % 2b 
 

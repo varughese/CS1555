@@ -1,0 +1,7 @@
+sport_id,sport_name,description,dob,team_size
+1,400M,Run 400 meters across the track,06-Apr-1896,1
+2,800M,Run two laps across the track,06-Apr-1896,1
+3,100M,Run 100 meters on the track,06-Apr-1896,1
+4,4x1,"A relay, where people pass a baton",06-Apr-1896,4
+5,4x4,"A relay, where people complete a mile in total",06-Apr-1896,4
+6,Basketball,A game where people shoot a ball into a hoop,06-Apr-1936,5

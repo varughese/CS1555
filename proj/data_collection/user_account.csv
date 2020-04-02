@@ -1,0 +1,16 @@
+user_id,username,passkey,role_id,last_login
+0,guest,GUEST,1,null
+1,Carlos Arthur Nuzman,Rio,2,null
+2,Gianna Angelopoulos,Athens,2,null
+3,Hu Jintao,Beijing,2,null
+4,Sebastian Coe,London,2,null
+5,Paul Hadzor,ph,3,null
+6,Tom Crouse,tc,3,null
+7,Nicole Jones,nj,3,null
+8,Michael Yang,my,3,null
+9,Edward Burgess,eb,3,null
+10,Andrew Li,al,3,null
+11,Bobby Eppleman,be ,3,null
+12,Tim Pappas,tp,3,null
+13,Karin Hufnagl,kh,3,null
+14,Zachary Fifer,zf,3,null
