@@ -83,3 +83,38 @@ CREATE OR REPLACE VIEW V_VENUE_COUNT AS
 SELECT V.VENUE_ID, COUNT, CAPACITY
 FROM (SELECT VENUE_ID, COUNT(*) as COUNT FROM EVENT GROUP BY VENUE_ID) VENUE_COUNT
 JOIN VENUE V on VENUE_COUNT.VENUE_ID = V.VENUE_ID;
+
+-- We ensure that an event is in the correct venue for the correct olympics
+CREATE OR REPLACE TRIGGER VENUE_CHECK
+BEFORE INSERT OR UPDATE ON EVENT_PARTICIPATION
+FOR EACH ROW
+DECLARE
+    the_olympic_id number;
+    the_venue_id number;
+    the_venue_olympic_id number;
+    incorrect_olympic_exception EXCEPTION;
+BEGIN
+    SELECT olympic_id INTO the_olympic_id FROM TEAM WHERE TEAM_ID = :new.team_id;
+    SELECT olympic_id INTO the_venue_olympic_id FROM VENUE WHERE VENUE_ID = (
+        SELECT VENUE_ID INTO the_venue_id FROM EVENT WHERE EVENT.EVENT_ID = :new.event_id
+    );
+    IF the_olympic_id <> the_venue_olympic_id THEN
+        DBMS_OUTPUT.PUT_LINE('The event is occuring at a venue that is for a different olympics');
+        RAISE incorrect_olympic_exception;
+    end if;
+END;
+
+-- Make sure any new scoreboard entry is for a valid team
+CREATE OR REPLACE TRIGGER SCOREBOARD_ELIGIBLE_TEAM
+BEFORE INSERT OR UPDATE ON SCOREBOARD
+FOR EACH ROW
+DECLARE
+    status char;
+    ineligible_team_exception EXCEPTION;
+BEGIN
+    SELECT status INTO status FROM EVENT_PARTICIPATION WHERE event_id = :new.event_id;
+    IF status = 'n' THEN
+        DBMS_OUTPUT.PUT_LINE('Team is ineligible.');
+        RAISE ineligible_team_exception;
+    end if;
+end;
