@@ -141,6 +141,6 @@ CREATE TABLE SCOREBOARD(
     CONSTRAINT pk_scoreboard PRIMARY KEY (olympic_id, event_id, team_id, participant_id),
     CONSTRAINT fk_scoreboard_olympic_id FOREIGN KEY (olympic_id) REFERENCES OLYMPICS(olympic_id),
     CONSTRAINT fk_scoreboard_event_id FOREIGN KEY (event_id) REFERENCES EVENT(event_id),
-    CONSTRAINT fk_scoreboard_team_id FOREIGN KEY (team_id) REFERENCES TEAM(team_id),
+    CONSTRAINT fk_scoreboard_team_participant FOREIGN KEY (team_id, participant_id) REFERENCES TEAM_MEMBER(team_id, participant_id),
     CONSTRAINT fk_scoreboard_medal_id FOREIGN KEY (medal_id) REFERENCES MEDAL(medal_id)
-)
+);

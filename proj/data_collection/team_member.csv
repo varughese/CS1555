@@ -37,22 +37,30 @@ team_id,participant_id,ignore,ignore
 15,34,,
 16,35,,
 17,36,,
+18,31,some inserts were forgotten,
+19,45,,
+20,46,,
+21,47,,
+22,48,,
+23,49,,
+24,50,,
+25,51,,
 26,16,beijing 2008 400m olympics,Team Merritt
 27,6,,Team Wariner
-28,63,,Team Neville
+28,64,,Team Neville
 29,47,,Team Brown
-30,59,,Team Djhone
-31,60,,Team Roony
-32,61,,Team Quow
-33,62,,Team Wissman
+30,60,,Team Djhone
+31,61,,Team Roony
+32,62,,Team Quow
+33,63,,Team Wissman
 34,6,athens 2004 400m olympics,Team Wariner
-35,70,,Team Harris
-36,71,,Team Brew
-37,72,,Team Francique
-38,73,,Team Simpson
-39,74,,Team Clarke
+35,71,,Team Harris
+36,72,or u c,Team Brew
+37,73,,Team Francique
+38,74,,Team Simpson
+39,75,,Team Clarke
 40,60,,Team Djhone
-41,75,,Team Blackwood
+41,76,,Team Blackwood
 42,83,athens 2004 800m olympics,Team Kipketer
 43,84,,Team Ismail
 44,85,,Team Mutua
@@ -62,7 +70,7 @@ team_id,participant_id,ignore,ignore
 48,89,,Team Dos Santos
 49,90,,Team Johnson
 50,99,Beijing 2008 800m olympics,Team Bungei
-51,89,,Team Ismail
+51,84,,Team Ismail
 52,100,,Team Yego
 53,101,,Team Reed
 54,102,,Team Kamel
