@@ -2,7 +2,7 @@ import java.sql.*;
 import java.util.Scanner;
 
 public class Olympic {
-    private static User loggedInUser = null;
+    public static User loggedInUser = null;
     private static final String username = "mav120";
     private static final String password = "4182213";
     private static final String url = "jdbc:oracle:thin:@class3.cs.pitt.edu:1521:dbclass";
@@ -14,9 +14,11 @@ public class Olympic {
 
        Database Logic
         - Handle preparation of SQL statements and talk to database
+
        Application Logic
-        - Mainly deciding which users can have what options, and cleanly logging
-        - in, and the glue between user input and talking to the database
+        - Deciding which users can have what options, logging
+        - them in, and the glue between user input and talking to the database
+
        The CLI Interface
         - Getting user input and displaying things to command line.
     */
@@ -39,6 +41,7 @@ public class Olympic {
     /** Given a username, passkey, role id, add a new user to the system. The “last login” should be
      set with the creation date and time. Only organizers can add any kind of users to the system.*/
     public static void createUser(String username, String passkey, int role_id) throws SQLException {
+        if (loggedInUser == null) return;
         if (role_id > 3 || role_id < 2) {
             role_id = 2;
         }
@@ -54,6 +57,7 @@ public class Olympic {
 
     /** This function should remove the user from the system */
     public static void dropUser(String username) throws SQLException {
+        if (loggedInUser == null) return;
         Connection connection = startConnection();
         // TODO
         PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
@@ -63,6 +67,7 @@ public class Olympic {
     /** Given a sport ID, a venue ID, date/time and whether it is a men’s or women’s event, add a new
      event to the system */
     public static void createEvent() throws SQLException {
+        if (loggedInUser == null) return;
         Connection connection = startConnection();
         // TODO
         PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
@@ -73,6 +78,7 @@ public class Olympic {
     /** Given an Olympic game, team, event, participant and position, add the outcome of the result
      to the scoreboard */
     public static void addEventOutcome() throws SQLException {
+        if (loggedInUser == null) return;
         Connection connection = startConnection();
         // TODO
         PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
@@ -83,6 +89,7 @@ public class Olympic {
      to system. Team IDs should be auto-generated, and only coaches can create teams and their
      name is added as the team coach (team member). */
     public static void createTeam() throws SQLException {
+        if (loggedInUser == null) return;
         Connection connection = startConnection();
         // TODO
         PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
@@ -91,6 +98,7 @@ public class Olympic {
 
     /** Given a team id and an event id, the team is register to an existing event. */
     public static void registerTeam() throws SQLException {
+        if (loggedInUser == null) return;
         Connection connection = startConnection();
         // TODO
         PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
@@ -99,6 +107,7 @@ public class Olympic {
 
     /** Given the first name, last name, nationality, birth place, do, create participant. */
     public static void addParticipant() throws SQLException {
+        if (loggedInUser == null) return;
         Connection connection = startConnection();
         // TODO
         PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
@@ -107,6 +116,7 @@ public class Olympic {
 
     /** Given a team ID and a participant, add the member to the team. Only the coach of the team */
     public static void addTeamMember() throws SQLException {
+        if (loggedInUser == null) return;
         Connection connection = startConnection();
         // TODO
         PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
@@ -116,6 +126,7 @@ public class Olympic {
     /** This function should remove the athlete from the system (i.e., deleting all of their information
      from the system).  */
     public static void dropTeamMember() throws SQLException {
+        if (loggedInUser == null) return;
         Connection connection = startConnection();
         // TODO
         PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
@@ -160,6 +171,7 @@ public class Olympic {
      medals winners and their countries. (athletes who got medals should be displayed first according
      to medals i.e., gold, silver and bronze and sorted on the Olympic year). */
     public static void displaySport() throws SQLException {
+        if (loggedInUser == null) return;
         Connection connection = startConnection();
         // TODO
         PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
@@ -169,6 +181,7 @@ public class Olympic {
     /** Given an Olympic game (City, Year) and an event id, display the Olympic game, event name,
      participant and the position along with the earned medal. */
     public static void displayEvent() throws SQLException {
+        if (loggedInUser == null) return;
         Connection connection = startConnection();
         // TODO
         PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
@@ -180,6 +193,7 @@ public class Olympic {
      of gold, silver and bronze medals and their ranking sorted in descending order. The rank is
      computed based on the points associated with each metal. */
     public static void countryRanking() throws SQLException {
+        if (loggedInUser == null) return;
         Connection connection = startConnection();
         // TODO
         PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
@@ -190,6 +204,7 @@ public class Olympic {
      the number of gold, silver and bronze medals in a descending order of their rank. The rank is
      computed based on the points associated with each metal */
     public static void topkAthletes() throws SQLException {
+        if (loggedInUser == null) return;
         Connection connection = startConnection();
         // TODO
         PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
@@ -203,6 +218,7 @@ public class Olympic {
      in the current Olympic games (olympic id) and C competed with B in the immediate previous
      Olympic (olympic id). */
     public static void connectedAthletes() throws SQLException {
+        if (loggedInUser == null) return;
         Connection connection = startConnection();
         // TODO
         PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
@@ -212,14 +228,7 @@ public class Olympic {
     /** The function should return the user to the top level of the UI after marking the time of the
      user’s logout in the user’s “last login” field of the USER ACCOUNT relation. */
     public static void logout() throws SQLException {
-        Connection connection = startConnection();
-        // TODO
-        PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
-        connection.close();
-    }
-
-    /** Exit the program, cleanly! */
-    public static void exit() throws SQLException {
+        if (loggedInUser == null) return;
         Connection connection = startConnection();
         // TODO
         PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
@@ -298,29 +307,27 @@ public class Olympic {
 
 
     public enum Operation {
-        CREATE_USER(0, "Create User"),
-        DROP_USER(1, "Remove User"),
-        CREATE_EVENT(2, "Create Event"),
-        ADD_EVENT_OUTCOME(3, "Add Event Outcome"),
-        CREATE_TEAM(4, "Create Team"),
-        REGISTER_TEAM(5, "Register Team"),
-        ADD_PARTICIPANT(6, "Add Participant"),
-        ADD_TEAM_MEMBER(7, "Add Team Member"),
-        DROP_TEAM_MEMBER(8, "Drop Team Member"),
-        DISPLAY_SPORT(9, "Display Sport"),
-        DISPLAY_EVENT(10, "Display Event"),
-        COUNTRY_RANKING(11, "Display Country Ranking"),
-        TOP_K_ATHLETES(12, "Display Top K Athletes"),
-        CONNECTED_ATHLETES(13, "Display Connected Athletes"),
-        LOGOUT(14, "Logout"),
-        EXIT(15, "Exit"),
-        LOGIN(16, "Login");
+        CREATE_USER("Create User"),
+        DROP_USER("Remove User"),
+        CREATE_EVENT("Create Event"),
+        ADD_EVENT_OUTCOME("Add Event Outcome"),
+        CREATE_TEAM("Create Team"),
+        REGISTER_TEAM("Register Team"),
+        ADD_PARTICIPANT("Add Participant"),
+        ADD_TEAM_MEMBER("Add Team Member"),
+        DROP_TEAM_MEMBER("Drop Team Member"),
+        DISPLAY_SPORT("Display Sport"),
+        DISPLAY_EVENT("Display Event"),
+        COUNTRY_RANKING("Display Country Ranking"),
+        TOP_K_ATHLETES("Display Top K Athletes"),
+        CONNECTED_ATHLETES("Display Connected Athletes"),
+        LOGOUT("Logout"),
+        EXIT("Exit"),
+        LOGIN("Login");
 
-        private int value;
         private String description;
 
-        Operation(int value, String desc) {
-            this.value = value;
+        Operation(String desc) {
             this.description = desc;
         }
     }
