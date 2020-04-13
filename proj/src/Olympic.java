@@ -206,12 +206,14 @@ public class Olympic {
 
     /** This function should remove the athlete from the system (i.e., deleting all of their information
      from the system).  */
-    public static void dropTeamMember() throws SQLException {
-        if (loggedInUser == null) return;
+    public static int dropTeamMember(int participant_id) throws SQLException {
+        if (loggedInUser == null) return -7;
         Connection connection = startConnection();
-        // TODO
-        PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
+        PreparedStatement stmt = connection.prepareStatement("DELETE FROM PARTICIPANT WHERE PARTICIPANT_ID = ?");
+        stmt.setInt(1, participant_id);
+        int deletedCount = stmt.executeUpdate();
         connection.close();
+        return deletedCount;
     }
 
     /** Given username and password, login in the system when an appropriate match is found with

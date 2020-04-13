@@ -41,6 +41,10 @@ public class Driver {
         Olympic.logout();
         Olympic.login("Nicole Jones", "nj");
 
+        assert_(
+                Olympic.dropTeamMember(-1) == 0,
+                "Does not delete anyone with invalid participant id");
+
         int event_id = Olympic.createEvent(1, 4, new Date(), 'm');
         assert_(event_id > 0, "Creates an event, id (" + event_id + ")");
 
@@ -61,6 +65,11 @@ public class Driver {
         assert_(true, "Add team member with id " + participant_id + " to team " + team_id);
         int added = Olympic.addEventOutcome(2, team_id, event_id,participant_id, 1);
         assert_(added >= 1, "Adds item to scoreboard");
+
+
+        assert_(
+                Olympic.dropTeamMember(participant_id) == 1,
+                "Deletes team member (participant id " + participant_id + ")");
     }
 
     public static void main(String[] args) {
