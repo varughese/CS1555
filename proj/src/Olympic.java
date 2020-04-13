@@ -303,8 +303,12 @@ public class Olympic {
                 int choice = CLI.getUserOption(1, 2);
                 UserType userType = choice == 1 ? UserType.ORGANIZER : UserType.COACH;
                 System.out.println("Creating user ... ");
-                int user_id = createUser(username.trim(), passkey, userType);
-                System.out.println("Created! Their user id is " + user_id);
+                try {
+                    int user_id = createUser(username.trim(), passkey, userType);
+                    System.out.println("Created! Their user id is " + user_id);
+                } catch (SQLException e) {
+                    System.out.println("Sorry, that user was not able to be created. Do they already exist?");
+                }
                 break;
             }
             case DROP_USER: {
