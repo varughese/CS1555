@@ -77,6 +77,17 @@ BEGIN
     END IF;
 END;
 
+CREATE OR REPLACE TRIGGER participant_sequence
+  BEFORE INSERT ON PARTICIPANT
+  FOR EACH ROW
+BEGIN
+    IF :new.PARTICIPANT_ID IS NULL THEN
+        SELECT participant_sequence.nextval
+        INTO :new.PARTICIPANT_ID
+        FROM dual;
+    END IF;
+END;
+
 -- If new user account and role is guest, then set password to GUEST
 CREATE OR REPLACE TRIGGER SET_GUEST_PASSWORD
     BEFORE INSERT ON USER_ACCOUNT
@@ -164,6 +175,16 @@ CREATE OR REPLACE VIEW V_VENUE_COUNT AS
 SELECT V.VENUE_ID, EVENT_TIME, COUNT, CAPACITY
 FROM (SELECT EVENT_TIME, VENUE_ID, COUNT(*) as COUNT FROM EVENT GROUP BY EVENT_TIME, VENUE_ID) VENUE_COUNT
 RIGHT JOIN VENUE V on VENUE_COUNT.VENUE_ID = V.VENUE_ID;
+
+
+-- Set a team's eligibility based on all of its team members
+CREATE OR REPLACE TRIGGER REGISTER_TEAM_ELLIGIBILITY
+    BEFORE INSERT OR UPDATE ON EVENT_PARTICIPATION
+    FOR EACH ROW
+BEGIN
+-- TODO
+end;
+
 
 
 -- We ensure that an event is in the correct venue for the correct olympics

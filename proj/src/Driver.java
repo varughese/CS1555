@@ -37,16 +37,13 @@ public class Driver {
         assert_(deleted == 1, "Deletes created user");
     }
 
-    public static void testEvents() throws SQLException {
-        int event_id = Olympic.createEvent(1, 4, new Date(), 'm');
-        assert_(event_id > 0, "Creates an event, id (" + event_id + ")");
-        int added = Olympic.addEventOutcome(2, 5, event_id,0, 1);
-        assert_(added > 1, "Adds item to scoreboard");
-    }
-
-    public static void testTeam() throws SQLException {
+    public static void testTeamAndEvent() throws SQLException {
         Olympic.logout();
         Olympic.login("Nicole Jones", "nj");
+
+        int event_id = Olympic.createEvent(1, 4, new Date(), 'm');
+        assert_(event_id > 0, "Creates an event, id (" + event_id + ")");
+
         int team_id = Olympic.createTeam(
           "London",
           2012,
@@ -56,15 +53,22 @@ public class Driver {
           20
         );
         assert_(team_id >= 0, "Created new team with id " + team_id);
+        Olympic.registerTeam(event_id, team_id);
+        assert_(true, "Registered team (" + team_id + ") to (" + event_id + ")");
+        int participant_id = Olympic.addParticipant("Daniel","Mosse", "Brazil", "Pittsburgh", new Date());
+        assert_(participant_id > 0, "Added participant with id " + participant_id);
+        Olympic.addTeamMember(team_id, participant_id);
+        assert_(true, "Add team member with id " + participant_id + " to team " + team_id);
+        int added = Olympic.addEventOutcome(2, team_id, event_id,participant_id, 1);
+        assert_(added >= 1, "Adds item to scoreboard");
     }
 
     public static void main(String[] args) {
         try {
-            testLoginLogout();
-            testUserCreateDrop();
-            Olympic.login("guest", "GUEST");
-//            testEvents();
-            testTeam();
+//            testLoginLogout();
+//            testUserCreateDrop();
+//            Olympic.login("guest", "GUEST");
+            testTeamAndEvent();
         } catch (SQLException e1) {
             System.out.println("SQL Error");
             while (e1 != null) {

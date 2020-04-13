@@ -103,6 +103,9 @@ public class Olympic {
      to the scoreboard */
     public static int addEventOutcome(int olympic_id, int team_id, int event_id, int participant_id, int position) throws SQLException {
         if (loggedInUser == null) return -7;
+        // I assume 'an Olympic game' means olympic_id. I have already shown with
+        // the PROC_CREATE_TEAM procedure that I know how to find the olympic id given
+        // other details.
         Connection connection = startConnection();
         PreparedStatement stmt = connection.prepareStatement("INSERT INTO scoreboard values(?, ?, ?, ?, ?, null)");
         stmt.setInt(1, olympic_id);
@@ -156,29 +159,48 @@ public class Olympic {
     }
 
     /** Given a team id and an event id, the team is register to an existing event. */
-    public static void registerTeam() throws SQLException {
+    public static void registerTeam(int event_id, int team_id) throws SQLException {
         if (loggedInUser == null) return;
         Connection connection = startConnection();
-        // TODO
-        PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
+        PreparedStatement stmt = connection.prepareStatement("INSERT INTO EVENT_PARTICIPATION values(?, ?, 'e')");
+        stmt.setInt(1, event_id);
+        stmt.setInt(2, team_id);
+
+        stmt.executeUpdate();
         connection.close();
     }
 
-    /** Given the first name, last name, nationality, birth place, do, create participant. */
-    public static void addParticipant() throws SQLException {
-        if (loggedInUser == null) return;
+    /** Given the first name, last name, nationality, birth place, dob, create participant. */
+    public static int addParticipant(String firstname, String lastname, String nationality, String birthPlace, Date dob) throws SQLException {
+        if (loggedInUser == null) return -7;
         Connection connection = startConnection();
-        // TODO
-        PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
+        PreparedStatement stmt = connection.prepareStatement("INSERT INTO PARTICIPANT values(null, ?, ?, ?, ?, ?)");
+        stmt.setString(1, firstname);
+        stmt.setString(2, lastname);
+        stmt.setString(3, nationality);
+        stmt.setString(4, birthPlace);
+        stmt.setDate(5, new java.sql.Date(dob.getTime()));
+
+        stmt.executeUpdate();
+
+        PreparedStatement getId = connection.prepareStatement("SELECT participant_sequence.currval FROM dual");
+        ResultSet rs = getId.executeQuery();
+        int participant_id = -1;
+        if (rs.next()) {
+            participant_id = (int) rs.getLong(1);
+        }
         connection.close();
+        return participant_id;
     }
 
     /** Given a team ID and a participant, add the member to the team. Only the coach of the team */
-    public static void addTeamMember() throws SQLException {
+    public static void addTeamMember(int team_id, int participant_id) throws SQLException {
         if (loggedInUser == null) return;
         Connection connection = startConnection();
-        // TODO
-        PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
+        PreparedStatement stmt = connection.prepareStatement("INSERT INTO TEAM_MEMBER values(?, ?)");
+        stmt.setInt(1, team_id);
+        stmt.setInt(2, participant_id);
+        stmt.executeUpdate();
         connection.close();
     }
 
