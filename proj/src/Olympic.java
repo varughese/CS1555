@@ -41,28 +41,37 @@ public class Olympic {
 
     /** Given a username, passkey, role id, add a new user to the system. The “last login” should be
      set with the creation date and time. Only organizers can add any kind of users to the system.*/
-    public static void createUser(String username, String passkey, int role_id) throws SQLException {
-        if (loggedInUser == null) return;
-        if (role_id > 3 || role_id < 2) {
-            role_id = 2;
-        }
+    public static int createUser(String username, String passkey, UserType userType) throws SQLException {
+        if (loggedInUser == null) return -1;
+        int role_id = userType.id;
 
         Connection connection = startConnection();
-        // TODO
-        PreparedStatement stmt = connection.prepareStatement("INSERT INTO USER_ACCOUNT values(?, ?, ?)");
+        PreparedStatement stmt = connection.prepareStatement("INSERT INTO USER_ACCOUNT values(null, ?, ?, ?, null)");
         stmt.setString(1, username);
         stmt.setString(2, passkey);
         stmt.setInt(3, role_id);
+
+        stmt.executeUpdate();
+
+        PreparedStatement getId = connection.prepareStatement("SELECT user_accounts_sequence.currval FROM USER_ACCOUNT");
+        ResultSet rs = getId.executeQuery();
+        int user_id = -1;
+        if (rs.next()) {
+            user_id = (int) rs.getLong(1);
+        }
         connection.close();
+        return user_id;
     }
 
     /** This function should remove the user from the system */
-    public static void dropUser(String username) throws SQLException {
-        if (loggedInUser == null) return;
+    public static int dropUser(String username) throws SQLException {
+        if (loggedInUser == null) return 0;
         Connection connection = startConnection();
-        // TODO
-        PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
+        PreparedStatement stmt = connection.prepareStatement("DELETE FROM USER_ACCOUNT WHERE username = ?");
+        stmt.setString(1, username);
+        int deleted = stmt.executeUpdate();
         connection.close();
+        return deleted;
     }
 
     /** Given a sport ID, a venue ID, date/time and whether it is a men’s or women’s event, add a new
@@ -235,10 +244,15 @@ public class Olympic {
         Connection connection = startConnection();
         int user_id = loggedInUser.getUserId();
         String username = loggedInUser.username;
+        connection.setAutoCommit(false);
+        connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
         CallableStatement cs = connection.prepareCall("{call PROC_USER_LOGOUT(?, ?)}");
         cs.setInt(1, user_id);
         cs.setString(2, username);
-        cs.execute();
+        cs.executeUpdate();
+        connection.commit();
+        connection.setAutoCommit(true);
+        connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
         loggedInUser = null;
         connection.close();
 
@@ -280,12 +294,30 @@ public class Olympic {
                 CLI.promptLogin();
                 System.out.println(loggedInUser.getGreeting());
                 break;
-            case CREATE_USER:
-                System.out.println("TODO - " + op);
+            case CREATE_USER: {
+                String username = CLI.getUserString("Username", 30);
+                String passkey = CLI.getUserString("Password", 20);
+                System.out.println("What type of user are they?");
+                System.out.println("\t1. Organizer\n\t2. Coach.");
+                System.out.println("All guests can log into the system with username guest and password GUEST.");
+                int choice = CLI.getUserOption(1, 2);
+                UserType userType = choice == 1 ? UserType.ORGANIZER : UserType.COACH;
+                System.out.println("Creating user ... ");
+                int user_id = createUser(username.trim(), passkey, userType);
+                System.out.println("Created! Their user id is " + user_id);
                 break;
-            case DROP_USER:
-                System.out.println("TODO - " + op);
+            }
+            case DROP_USER: {
+                String username = CLI.getUserString("Username", 30);
+                System.out.println("Deleting - " + username);
+                int deleted = dropUser(username);
+                if (deleted >= 1) {
+                    System.out.println("Deleted!");
+                } else {
+                    System.out.println("Did not find that user.");
+                }
                 break;
+            }
             case CREATE_EVENT:
                 System.out.println("TODO - " + op);
                 break;
@@ -390,10 +422,15 @@ public class Olympic {
         }
     }
 
-    private enum UserType {
-        GUEST,
-        ORGANIZER,
-        COACH
+    public enum UserType {
+        GUEST(1),
+        ORGANIZER(2),
+        COACH(3);
+
+        public int id;
+
+        UserType(int _id) { id = _id; }
+
     }
 
     public static class Guest extends User {
@@ -505,6 +542,15 @@ public class Olympic {
 
             sc.nextLine(); // Consume the '\n', because scanner is particular like that
             return choice;
+        }
+
+        private static String getUserString(String prompt, int maxCharLength) {
+            String result;
+            do {
+                System.out.print(prompt + ": ");
+                result = sc.nextLine();
+            } while (result.length() > maxCharLength);
+            return result;
         }
 
         private static void clearConsole() {

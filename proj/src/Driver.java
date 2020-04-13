@@ -25,12 +25,20 @@ public class Driver {
         assert_ (shouldBeTrue, "Logs in organizer");
         Olympic.logout();
         Olympic.login("Nicole Jones", "nj");
-        assert_(Olympic.loggedInUser.username.equals("Nicole Joines"), "Logs in organizer and sets username");
+        assert_(Olympic.loggedInUser.username.equals("Nicole Jones"), "Logs in coach and sets username");
+    }
+
+    public static void testUserCreateDrop() throws SQLException {
+        int user_id = Olympic.createUser("rakan", "hates_databases", Olympic.UserType.ORGANIZER);
+        assert_(user_id > 0, "Creates a user id (" + user_id + ") for rakan");
+        int deleted = Olympic.dropUser("rakan");
+        assert_(deleted == 1, "Deletes created user");
     }
 
     public static void main(String[] args) {
         try {
             testLoginLogout();
+            testUserCreateDrop();
         } catch (SQLException e1) {
             System.out.println("SQL Error");
             while (e1 != null) {
