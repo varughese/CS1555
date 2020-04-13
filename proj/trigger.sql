@@ -229,3 +229,10 @@ FOR EACH ROW
 BEGIN
     SELECT SYSDATE INTO :new.last_login FROM dual;
 end;
+
+CREATE OR REPLACE PROCEDURE PROC_USER_LOGOUT(user_id_ number, username_ varchar2) AS
+BEGIN
+    UPDATE USER_ACCOUNT
+        set LAST_LOGIN = SYSDATE
+    WHERE USER_ID = user_id_ AND USERNAME = username_;
+END;

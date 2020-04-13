@@ -9,6 +9,7 @@ public class Driver {
             System.out.println("Passing: " + desc);
         }
     }
+
     public static void testLoginLogout() throws SQLException {
         boolean shouldBeFalse = Olympic.login("jawn", "jawn");
         assert_ (!shouldBeFalse, "Does not log in incorrect password");

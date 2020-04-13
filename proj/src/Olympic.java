@@ -141,22 +141,23 @@ public class Olympic {
             return true;
         }
         Connection connection = startConnection();
-        PreparedStatement stmt = connection.prepareStatement("SELECT role_id FROM USER_ACCOUNT WHERE username=? AND passkey=?");
+        PreparedStatement stmt = connection.prepareStatement("SELECT user_id, role_id FROM USER_ACCOUNT WHERE username=? AND passkey=?");
         stmt.setString(1, username);
         stmt.setString(2, password);
         ResultSet rs = stmt.executeQuery();
         if (rs.next()) {
+            int user_id = rs.getInt("user_id");
             int role_id = rs.getInt("role_id");
             switch (role_id) {
                 case 2:
-                    loggedInUser = new Organizer(username);
+                    loggedInUser = new Organizer(user_id, username);
                     break;
                 case 3:
-                    loggedInUser = new Coach(username);
+                    loggedInUser = new Coach(user_id, username);
                     break;
                 case 1:
                 default:
-                    loggedInUser = new Guest(username);
+                    loggedInUser = new Guest(user_id, username);
                     break;
             }
 
@@ -230,25 +231,48 @@ public class Olympic {
     public static void logout() throws SQLException {
         if (loggedInUser == null) return;
         Connection connection = startConnection();
-        // TODO
-        PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
+        int user_id = loggedInUser.getUserId();
+        String username = loggedInUser.username;
+        CallableStatement cs = connection.prepareCall("{call PROC_USER_LOGOUT(?, ?)}");
+        cs.setInt(1, user_id);
+        cs.setString(2, username);
+        cs.execute();
+        loggedInUser = null;
         connection.close();
+
+    }
+
+    /** Exit cleanly */
+    public static void exit() {
+        System.out.println("Goodbye!");
     }
 
     public static void main(String args[]) {
         Operation currentOperation = CLI.displayWelcomeScreen();
+
         while (currentOperation != Operation.EXIT) {
-            executeOperation(currentOperation);
-            System.out.println();
-            currentOperation = CLI.displayUserMenu();
+            try {
+                executeOperation(currentOperation);
+                System.out.println();
+                if (currentOperation == Operation.LOGOUT) {
+                    currentOperation = CLI.displayWelcomeScreen();
+                } else {
+                    currentOperation = CLI.displayUserMenu();
+                }
+            } catch (SQLException e) {
+                System.out.println("Hm. Something weird happened. Let's try again.");
+            }
         }
 
-        System.out.println("\nGoodbye!");
+        try {
+            executeOperation(Operation.EXIT);
+        } catch (SQLException e) {
+            System.out.println("Error = " + e.getErrorCode());
+        }
     }
 
-
     // Application logic layer - this handles business logic of the application.
-    public static void executeOperation(Operation op) {
+    public static void executeOperation(Operation op) throws SQLException {
         switch (op) {
             case LOGIN:
                 CLI.promptLogin();
@@ -297,10 +321,12 @@ public class Olympic {
                 System.out.println("TODO - " + op);
                 break;
             case LOGOUT:
-                System.out.println("TODO - " + op);
+                logout();
+                CLI.clearConsole();
+                System.out.println("Logged you out!");
                 break;
             case EXIT:
-                System.out.println("TODO - " + op);
+                exit();
                 break;
         }
     }
@@ -336,8 +362,9 @@ public class Olympic {
     private static abstract class User {
         public UserType userType;
         public String username;
+        public int userId;
 
-        public User(UserType userType, String username) {
+        public User(UserType userType, String username, int userId) {
             this.userType = userType;
             this.username = username;
         }
@@ -352,6 +379,10 @@ public class Olympic {
             // user input will be handled in the CLI class.
             return getSupportedOperations()[i-1];
         }
+
+        public int getUserId() {
+            return userId;
+        }
     }
 
     private enum UserType {
@@ -361,8 +392,8 @@ public class Olympic {
     }
 
     public static class Guest extends User {
-        public Guest(String username) {
-            super(UserType.GUEST, username);
+        public Guest(int userId, String username) {
+            super(UserType.GUEST, username, userId);
         }
 
         public Operation[] ops = new Operation[] {
@@ -385,8 +416,8 @@ public class Olympic {
     }
 
     public static class Organizer extends User {
-        public Organizer(String username) {
-            super(UserType.ORGANIZER, username);
+        public Organizer(int userId, String username) {
+            super(UserType.ORGANIZER, username, userId);
         }
 
         public Operation[] ops = new Operation[] {
@@ -413,8 +444,8 @@ public class Olympic {
     }
 
     public static class Coach extends User {
-        public Coach(String username) {
-            super(UserType.COACH, username);
+        public Coach(int userId, String username) {
+            super(UserType.COACH, username, userId);
         }
 
         public Operation[] ops = new Operation[] {
