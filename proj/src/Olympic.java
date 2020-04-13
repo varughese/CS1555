@@ -147,16 +147,45 @@ public class Olympic {
     }
 
     public static void main(String args[]) {
-        System.out.println("WELCOME TO THE OLYMPICS");
-        System.out.println("1. Login");
-        System.out.println("2. Exit");
+        CLI.displayWelcomeScreen();
+        CLI.promptLogin();
 
-        System.out.print("Enter choice: ");
-        int choice = sc.nextInt();
+    }
 
-        while (choice != 2) {
+    private static class CLI {
+        private static int getUserOption() {
             System.out.print("Enter choice: ");
-            choice = sc.nextInt();
+            return sc.nextInt();
+        }
+
+        private static void displayWelcomeScreen() {
+            System.out.println("WELCOME TO THE OLYMPICS");
+            System.out.println("1. Login");
+            System.out.println("2. Exit");
+
+            int choice = getUserOption();
+
+            if (choice == 2) {
+                System.out.println("Goodbye!");
+                return;
+            } else if (choice == 1) {
+                promptLogin();
+            }
+        }
+
+        private static void promptLogin() {
+
+
+            while (choice != 2) {
+                System.out.print("Enter choice: ");
+                choice = sc.nextInt();
+            }
+
+            System.out.println("\nWould you like to exit the program? Type \"no\" for no, anything else to exit.");
+            String exitStr = sc.nextLine();
+            if("no".equals(exitStr)) {
+                promptLogin();
+            }
         }
     }
 }

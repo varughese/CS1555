@@ -1,3 +1,82 @@
+----------------
+-- Auto incrementing IDs triggers
+CREATE SEQUENCE user_accounts_sequence start with 200;
+CREATE SEQUENCE olympics_sequence start with 200;
+CREATE SEQUENCE sport_sequence start with 200;
+CREATE SEQUENCE team_sequence start with 200;
+CREATE SEQUENCE venue_sequence start with 200;
+CREATE SEQUENCE event_sequence start with 200;
+CREATE SEQUENCE participant_sequence start with 200;
+
+-- The database will always create the primary key. The init script
+-- already has id's pre-populated.
+
+CREATE OR REPLACE TRIGGER user_account_id
+  BEFORE INSERT ON USER_ACCOUNT
+  FOR EACH ROW
+BEGIN
+    IF :new.user_id IS NULL THEN
+        SELECT user_accounts_sequence.nextval
+        INTO :new.user_id
+        FROM dual;
+    END IF;
+END;
+
+CREATE OR REPLACE TRIGGER olympics_id
+  BEFORE INSERT ON OLYMPICS
+  FOR EACH ROW
+BEGIN
+    IF :new.OLYMPIC_ID IS NULL THEN
+        SELECT olympics_sequence.nextval
+        INTO :new.OLYMPIC_ID
+        FROM dual;
+    END IF;
+END;
+
+CREATE OR REPLACE TRIGGER sport_id
+  BEFORE INSERT ON SPORT
+  FOR EACH ROW
+BEGIN
+    IF :new.sport_id IS NULL THEN
+        SELECT sport_sequence.nextval
+        INTO :new.sport_id
+        FROM dual;
+    END IF;
+END;
+
+CREATE OR REPLACE TRIGGER team_id
+  BEFORE INSERT ON TEAM
+  FOR EACH ROW
+BEGIN
+    IF :new.team_id IS NULL THEN
+        SELECT team_sequence.nextval
+        INTO :new.team_id
+        FROM dual;
+    END IF;
+END;
+
+CREATE OR REPLACE TRIGGER venue_id
+  BEFORE INSERT ON VENUE
+  FOR EACH ROW
+BEGIN
+    IF :new.venue_id IS NULL THEN
+        SELECT venue_sequence.nextval
+        INTO :new.venue_id
+        FROM dual;
+    END IF;
+END;
+
+CREATE OR REPLACE TRIGGER event_id
+  BEFORE INSERT ON EVENT
+  FOR EACH ROW
+BEGIN
+    IF :new.event_id IS NULL THEN
+        SELECT event_sequence.nextval
+        INTO :new.event_id
+        FROM dual;
+    END IF;
+END;
+
 -- If new user account and role is guest, then set password to GUEST
 CREATE OR REPLACE TRIGGER SET_GUEST_PASSWORD
     BEFORE INSERT ON USER_ACCOUNT
@@ -8,7 +87,6 @@ BEGIN
         set PASSKEY = 'GUEST'
     WHERE USER_ID = :new.user_id;
 END;
-
 
 -- This trigger is responsible to assign the appropriate medal based on the
 -- position when new records are inserted or updated in the SCOREBOARD.
@@ -70,7 +148,7 @@ DECLARE
     e_capacity number;
     capacity_reached_exception EXCEPTION;
 BEGIN
-    SELECT COUNT, CAPACITY INTO e_count, e_capacity
+    SELECT COUNT, NVL(CAPACITY, 0) INTO e_count, e_capacity
     FROM V_VENUE_COUNT WHERE VENUE_ID = :new.venue_id;
 
     IF e_count + 1 > e_capacity THEN
@@ -82,7 +160,7 @@ END;
 CREATE OR REPLACE VIEW V_VENUE_COUNT AS
 SELECT V.VENUE_ID, COUNT, CAPACITY
 FROM (SELECT VENUE_ID, COUNT(*) as COUNT FROM EVENT GROUP BY VENUE_ID) VENUE_COUNT
-JOIN VENUE V on VENUE_COUNT.VENUE_ID = V.VENUE_ID;
+RIGHT JOIN VENUE V on VENUE_COUNT.VENUE_ID = V.VENUE_ID;
 
 -- We ensure that an event is in the correct venue for the correct olympics
 CREATE OR REPLACE TRIGGER VENUE_CHECK
