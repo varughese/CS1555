@@ -1,5 +1,6 @@
 import java.sql.*;
 import java.util.Scanner;
+import java.sql.Date;
 
 public class Olympic {
     public static User loggedInUser = null;
@@ -51,7 +52,7 @@ public class Olympic {
         PreparedStatement stmt = connection.prepareStatement("INSERT INTO USER_ACCOUNT values(?, ?, ?)");
         stmt.setString(1, username);
         stmt.setString(2, passkey);
-        stmt.setString(3, role_id+"");
+        stmt.setInt(3, role_id);
         connection.close();
     }
 
@@ -141,23 +142,24 @@ public class Olympic {
             return true;
         }
         Connection connection = startConnection();
-        PreparedStatement stmt = connection.prepareStatement("SELECT user_id, role_id FROM USER_ACCOUNT WHERE username=? AND passkey=?");
+        PreparedStatement stmt = connection.prepareStatement("SELECT user_id, role_id, last_login FROM USER_ACCOUNT WHERE username=? AND passkey=?");
         stmt.setString(1, username);
         stmt.setString(2, password);
         ResultSet rs = stmt.executeQuery();
         if (rs.next()) {
             int user_id = rs.getInt("user_id");
             int role_id = rs.getInt("role_id");
+            Date last_login = rs.getDate("last_login");
             switch (role_id) {
                 case 2:
-                    loggedInUser = new Organizer(user_id, username);
+                    loggedInUser = new Organizer(user_id, username, last_login);
                     break;
                 case 3:
-                    loggedInUser = new Coach(user_id, username);
+                    loggedInUser = new Coach(user_id, username, last_login);
                     break;
                 case 1:
                 default:
-                    loggedInUser = new Guest(user_id, username);
+                    loggedInUser = new Guest(user_id, username, last_login);
                     break;
             }
 
@@ -359,14 +361,17 @@ public class Olympic {
     }
 
 
-    private static abstract class User {
+    public static abstract class User {
         public UserType userType;
         public String username;
         public int userId;
+        public Date lastLoggedIn;
 
-        public User(UserType userType, String username, int userId) {
+        public User(UserType userType, String username, int userId, Date lastLoggedIn) {
             this.userType = userType;
+            this.userId = userId;
             this.username = username;
+            this.lastLoggedIn = lastLoggedIn;
         }
 
         public abstract String getGreeting();
@@ -392,8 +397,8 @@ public class Olympic {
     }
 
     public static class Guest extends User {
-        public Guest(int userId, String username) {
-            super(UserType.GUEST, username, userId);
+        public Guest(int userId, String username, Date lastLoggedIn) {
+            super(UserType.GUEST, username, userId, lastLoggedIn);
         }
 
         public Operation[] ops = new Operation[] {
@@ -416,8 +421,8 @@ public class Olympic {
     }
 
     public static class Organizer extends User {
-        public Organizer(int userId, String username) {
-            super(UserType.ORGANIZER, username, userId);
+        public Organizer(int userId, String username, Date lastLoggedIn) {
+            super(UserType.ORGANIZER, username, userId, lastLoggedIn);
         }
 
         public Operation[] ops = new Operation[] {
@@ -444,8 +449,8 @@ public class Olympic {
     }
 
     public static class Coach extends User {
-        public Coach(int userId, String username) {
-            super(UserType.COACH, username, userId);
+        public Coach(int userId, String username, Date lastLoggedIn) {
+            super(UserType.COACH, username, userId, lastLoggedIn);
         }
 
         public Operation[] ops = new Operation[] {

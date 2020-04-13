@@ -18,7 +18,14 @@ public class Driver {
         // already logged in, should return true no matter what
         shouldBeTrue = Olympic.login("jawn", "jawn");
         assert_ (shouldBeTrue, "Logging in if already logged in returns true");
-
+        Olympic.logout();
+        assert_ (Olympic.loggedInUser == null, "Set user variable to null after logout");
+        // log in as organizer
+        shouldBeTrue = Olympic.login("Hu Jintao", "Beijing");
+        assert_ (shouldBeTrue, "Logs in organizer");
+        Olympic.logout();
+        Olympic.login("Nicole Jones", "nj");
+        assert_(Olympic.loggedInUser.username.equals("Nicole Joines"), "Logs in organizer and sets username");
     }
 
     public static void main(String[] args) {
