@@ -1,6 +1,8 @@
 import java.sql.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Scanner;
-import java.sql.Date;
+import java.util.Date;
 
 public class Olympic {
     public static User loggedInUser = null;
@@ -76,12 +78,24 @@ public class Olympic {
 
     /** Given a sport ID, a venue ID, date/time and whether it is a men’s or women’s event, add a new
      event to the system */
-    public static void createEvent() throws SQLException {
-        if (loggedInUser == null) return;
+    public static int createEvent(int sport_id, int venue_id, Date event_date, char gender) throws SQLException {
+        if (loggedInUser == null) return -1;
         Connection connection = startConnection();
-        // TODO
-        PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
+        PreparedStatement stmt = connection.prepareStatement("INSERT INTO event values(null, ?, ?, ?, ?)");
+        stmt.setInt(1, sport_id);
+        stmt.setInt(2, venue_id);
+        stmt.setString(3, gender+"");
+        stmt.setDate(4, new java.sql.Date(event_date.getTime()));
+        stmt.executeUpdate();
+
+        PreparedStatement getId = connection.prepareStatement("SELECT event_sequence.currval FROM EVENT");
+        ResultSet rs = getId.executeQuery();
+        int event_id = -1;
+        if (rs.next()) {
+            event_id = (int) rs.getLong(1);
+        }
         connection.close();
+        return event_id;
     }
 
 
@@ -324,6 +338,7 @@ public class Olympic {
             }
             case CREATE_EVENT:
                 System.out.println("TODO - " + op);
+                Date eventTime = CLI.getUserDate();
                 break;
             case ADD_EVENT_OUTCOME:
                 System.out.println("TODO - " + op);
@@ -555,6 +570,28 @@ public class Olympic {
                 result = sc.nextLine();
             } while (result.length() > maxCharLength);
             return result;
+        }
+
+        private static Date getUserDate() {
+            System.out.println("Enter in a date, like yyyy/MM/dd");
+            String str[] = {"year", "month", "day" };
+            String date = "";
+
+            for(int i=0; i<3; i++) {
+                System.out.println("Enter " + str[i] + ": ");
+                date = date + sc.next() + "/";
+            }
+            date = date.substring(0, date.length()-1);
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+            Date parsedDate;
+
+            try {
+                parsedDate = dateFormat.parse(date);
+            } catch (ParseException e) {
+                System.out.println("Sorry, you entered in an invalid date. Let's try again.");
+                return getUserDate();
+            }
+            return parsedDate;
         }
 
         private static void clearConsole() {

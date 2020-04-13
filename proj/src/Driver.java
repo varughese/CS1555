@@ -1,5 +1,6 @@
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Date;
 
 public class Driver {
     public static void assert_(boolean b, String desc) {
@@ -26,6 +27,7 @@ public class Driver {
         Olympic.logout();
         Olympic.login("Nicole Jones", "nj");
         assert_(Olympic.loggedInUser.username.equals("Nicole Jones"), "Logs in coach and sets username");
+        Olympic.logout();
     }
 
     public static void testUserCreateDrop() throws SQLException {
@@ -35,10 +37,19 @@ public class Driver {
         assert_(deleted == 1, "Deletes created user");
     }
 
+    public static void testEvents() throws SQLException {
+        int event_id = Olympic.createEvent(1, 4, new Date(), 'm');
+        assert_(event_id > 0, "Creates an event, id (" + event_id + ")");
+
+    }
+
+
     public static void main(String[] args) {
         try {
-            testLoginLogout();
-            testUserCreateDrop();
+//            testLoginLogout();
+//            testUserCreateDrop();
+            Olympic.login("guest", "GUEST");
+            testEvents();
         } catch (SQLException e1) {
             System.out.println("SQL Error");
             while (e1 != null) {

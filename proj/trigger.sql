@@ -148,15 +148,17 @@ DECLARE
     e_capacity number;
     capacity_reached_exception EXCEPTION;
 BEGIN
-    SELECT COUNT, NVL(CAPACITY, 0) INTO e_count, e_capacity
+    SELECT NVL(COUNT, 0), NVL(CAPACITY, 100) INTO e_count, e_capacity
     FROM V_VENUE_COUNT
     WHERE VENUE_ID = :new.venue_id AND EVENT_TIME = :new.event_time;
-
     IF e_count + 1 > e_capacity THEN
         RAISE capacity_reached_exception;
     end if;
+EXCEPTION
+  WHEN no_data_found
+  THEN
+    e_count := 0;
 END;
-
 
 CREATE OR REPLACE VIEW V_VENUE_COUNT AS
 SELECT V.VENUE_ID, EVENT_TIME, COUNT, CAPACITY
