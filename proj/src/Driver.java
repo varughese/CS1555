@@ -40,16 +40,31 @@ public class Driver {
     public static void testEvents() throws SQLException {
         int event_id = Olympic.createEvent(1, 4, new Date(), 'm');
         assert_(event_id > 0, "Creates an event, id (" + event_id + ")");
-
+        int added = Olympic.addEventOutcome(2, 5, event_id,0, 1);
+        assert_(added > 1, "Adds item to scoreboard");
     }
 
+    public static void testTeam() throws SQLException {
+        Olympic.logout();
+        Olympic.login("Nicole Jones", "nj");
+        int team_id = Olympic.createTeam(
+          "London",
+          2012,
+          "Team Test",
+          "USA",
+          1,
+          20
+        );
+        assert_(team_id >= 0, "Created new team with id " + team_id);
+    }
 
     public static void main(String[] args) {
         try {
-//            testLoginLogout();
-//            testUserCreateDrop();
+            testLoginLogout();
+            testUserCreateDrop();
             Olympic.login("guest", "GUEST");
-            testEvents();
+//            testEvents();
+            testTeam();
         } catch (SQLException e1) {
             System.out.println("SQL Error");
             while (e1 != null) {

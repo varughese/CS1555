@@ -79,7 +79,7 @@ public class Olympic {
     /** Given a sport ID, a venue ID, date/time and whether it is a men’s or women’s event, add a new
      event to the system */
     public static int createEvent(int sport_id, int venue_id, Date event_date, char gender) throws SQLException {
-        if (loggedInUser == null) return -1;
+        if (loggedInUser == null) return -7;
         Connection connection = startConnection();
         PreparedStatement stmt = connection.prepareStatement("INSERT INTO event values(null, ?, ?, ?, ?)");
         stmt.setInt(1, sport_id);
@@ -101,23 +101,58 @@ public class Olympic {
 
     /** Given an Olympic game, team, event, participant and position, add the outcome of the result
      to the scoreboard */
-    public static void addEventOutcome() throws SQLException {
-        if (loggedInUser == null) return;
+    public static int addEventOutcome(int olympic_id, int team_id, int event_id, int participant_id, int position) throws SQLException {
+        if (loggedInUser == null) return -7;
         Connection connection = startConnection();
-        // TODO
-        PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
+        PreparedStatement stmt = connection.prepareStatement("INSERT INTO scoreboard values(?, ?, ?, ?, ?, null)");
+        stmt.setInt(1, olympic_id);
+        stmt.setInt(2, event_id);
+        stmt.setInt(3, team_id);
+        stmt.setInt(4, participant_id);
+        stmt.setInt(5, position);
+        int updated = stmt.executeUpdate();
         connection.close();
+        return updated;
     }
 
     /** Given an Olympic game (City, Year), sport, country, and the name of the team, add a new team
      to system. Team IDs should be auto-generated, and only coaches can create teams and their
      name is added as the team coach (team member). */
-    public static void createTeam() throws SQLException {
-        if (loggedInUser == null) return;
+    public static int createTeam(
+            String olympicCity,
+            int year,
+            String teamName,
+            String country,
+            int sport_id,
+            int coach_id
+    ) throws SQLException {
+        if (loggedInUser == null) return -7;
+        if (loggedInUser.userType != UserType.COACH) {
+            System.out.println("Only coaches can create a team.");
+            return -3;
+        }
         Connection connection = startConnection();
-        // TODO
-        PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
+        CallableStatement cs = connection.prepareCall("{CALL PROC_CREATE_TEAM(?, ?, ?, ?, ?, ?)}");
+        cs.setString(1, olympicCity);
+        cs.setInt(2, year);
+        cs.setString(3, teamName);
+        cs.setString(4, country);
+        cs.setInt(5, sport_id);
+        cs.setInt(6, coach_id);
+        int updatedRows = cs.executeUpdate();
+
+        if (updatedRows <= 0) {
+            System.out.println("Did not a matching olympics or country. Make sure you spelled those correctly.");
+        }
+
+        PreparedStatement getId = connection.prepareStatement("SELECT team_sequence.currval FROM dual");
+        ResultSet rs = getId.executeQuery();
+        int team_id = -1;
+        if (rs.next()) {
+            team_id = (int) rs.getLong(1);
+        }
         connection.close();
+        return team_id;
     }
 
     /** Given a team id and an event id, the team is register to an existing event. */
@@ -308,6 +343,7 @@ public class Olympic {
                 CLI.promptLogin();
                 System.out.println(loggedInUser.getGreeting());
                 break;
+
             case CREATE_USER: {
                 String username = CLI.getUserString("Username", 30);
                 String passkey = CLI.getUserString("Password", 20);
@@ -325,6 +361,7 @@ public class Olympic {
                 }
                 break;
             }
+
             case DROP_USER: {
                 String username = CLI.getUserString("Username", 30);
                 System.out.println("Deleting - " + username);
@@ -336,48 +373,74 @@ public class Olympic {
                 }
                 break;
             }
+
             case CREATE_EVENT:
                 System.out.println("TODO - " + op);
                 Date eventTime = CLI.getUserDate();
                 break;
+
             case ADD_EVENT_OUTCOME:
                 System.out.println("TODO - " + op);
                 break;
-            case CREATE_TEAM:
-                System.out.println("TODO - " + op);
+
+            case CREATE_TEAM: {
+                String olympicCity = CLI.getUserString("Olympic City", 30);
+                int olympicYear = CLI.getUserOption("Olympic Year", 1900, 2090);
+                String teamName = CLI.getUserString("Team Name", 50);
+                String country = CLI.getUserString("Country (3 Letter Code)", 10);
+                int sportId = CLI.getUserOption("Sport ID", 0, Integer.MAX_VALUE);
+                int coachId = CLI.getUserOption("Coach ID", 0, Integer.MAX_VALUE);
+                try {
+                    int team_id = createTeam(olympicCity, olympicYear, teamName, country, sportId, coachId);
+                    System.out.println("Created! Their team id is " + team_id);
+                } catch (SQLException e) {
+                    System.out.println("Sorry, that did not work. Carefully check all of your inputs and make sure they are correct.");
+                }
                 break;
+            }
+
             case REGISTER_TEAM:
                 System.out.println("TODO - " + op);
                 break;
+
             case ADD_PARTICIPANT:
                 System.out.println("TODO - " + op);
                 break;
+
             case ADD_TEAM_MEMBER:
                 System.out.println("TODO - " + op);
                 break;
+
             case DROP_TEAM_MEMBER:
                 System.out.println("TODO - " + op);
                 break;
+
             case DISPLAY_SPORT:
                 System.out.println("TODO - " + op);
                 break;
+
             case DISPLAY_EVENT:
                 System.out.println("TODO - " + op);
                 break;
+
             case COUNTRY_RANKING:
                 System.out.println("TODO - " + op);
                 break;
+
             case TOP_K_ATHLETES:
                 System.out.println("TODO - " + op);
                 break;
+
             case CONNECTED_ATHLETES:
                 System.out.println("TODO - " + op);
                 break;
+
             case LOGOUT:
                 logout();
                 CLI.clearConsole();
                 System.out.println("Logged you out!");
                 break;
+
             case EXIT:
                 exit();
                 break;
@@ -536,8 +599,8 @@ public class Olympic {
 
     // CLI Layer - this handles the user interfaces
     public static class CLI {
-        private static int getUserOption(int minChoice, int maxChoice) {
-            System.out.print("\nEnter choice: ");
+        private static int getUserOption(String prompt, int minChoice, int maxChoice) {
+            System.out.print(prompt + ": ");
             int choice = Integer.MIN_VALUE;
 
             // Getting user input is sooo annoying
@@ -562,6 +625,11 @@ public class Olympic {
             sc.nextLine(); // Consume the '\n', because scanner is particular like that
             return choice;
         }
+
+        private static int getUserOption(int minChoice, int maxChoice) {
+            return getUserOption("\nEnter choice", minChoice, maxChoice);
+        }
+
 
         private static String getUserString(String prompt, int maxCharLength) {
             String result;

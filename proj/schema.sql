@@ -140,7 +140,9 @@ CREATE TABLE SCOREBOARD(
     participant_id integer not null,
     position integer not null,
     medal_id integer,
-    CONSTRAINT pk_scoreboard PRIMARY KEY (olympic_id, event_id, team_id, participant_id),
+    -- event_id is unique to the Olympic year, since it has a venue_id which has an olympic_id. So every
+    -- event has to have a unique position
+    CONSTRAINT pk_scoreboard PRIMARY KEY (event_id, position),
     CONSTRAINT fk_scoreboard_olympic_id FOREIGN KEY (olympic_id) REFERENCES OLYMPICS(olympic_id),
     CONSTRAINT fk_scoreboard_event_id FOREIGN KEY (event_id) REFERENCES EVENT(event_id),
     CONSTRAINT fk_scoreboard_event_particp FOREIGN KEY (event_id, team_id) REFERENCES EVENT_PARTICIPATION(event_id, team_id),

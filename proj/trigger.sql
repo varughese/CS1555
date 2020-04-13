@@ -238,3 +238,22 @@ BEGIN
         set LAST_LOGIN = SYSDATE
     WHERE USER_ID = user_id_ AND USERNAME = username_;
 END;
+
+CREATE OR REPLACE PROCEDURE PROC_CREATE_TEAM(
+    olympic_city_ varchar2,
+    olympic_year_ number,
+    team_name_ varchar2,
+    country_ varchar2,
+    sport_ number,
+    coach_id_ number) AS
+    olympic_id_ number := -1;
+    country_id_ number := -1;
+    incorrect_inputs exception;
+BEGIN
+    SELECT OLYMPIC_ID INTO olympic_id_ FROM OLYMPICS WHERE lower(HOST_CITY) = lower(olympic_city_) AND EXTRACT(year FROM OPENING_DATE) = olympic_year_;
+    SELECT COUNTRY_ID INTO country_id_ FROM COUNTRY WHERE lower(COUNTRY) = lower(country_) OR lower(COUNTRY_CODE) = lower(country_);
+
+    INSERT INTO TEAM values(null, olympic_id_, team_name_, country_id_, sport_, coach_id_);
+end;
+
+-- Example: CALL PROC_CREATE_TEAM('London', 2012, 'team test', 'USA', 4, 1);
