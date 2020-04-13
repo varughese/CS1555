@@ -7,6 +7,9 @@
 -- find a trigger:
 SELECT COUNT(*) FROM USER_TRIGGERS WHERE TRIGGER_NAME='USER_ACCOUNT_ID';
 
+
+-- Then run all of these:
+
 INSERT INTO USER_ROLE values(1, 'guest');
 INSERT INTO USER_ROLE values(2, 'organizer');
 INSERT INTO USER_ROLE values(3, 'coach');
@@ -82,8 +85,8 @@ INSERT INTO EVENT values(0, 1, 0, 'm', '17-Aug-04');
 INSERT INTO EVENT values(1, 2, 2, 'f', '20-Aug-08');
 INSERT INTO EVENT values(2, 3, 4, 'm', '10-Aug-12');
 INSERT INTO EVENT values(3, 4, 6, 'f', '20-Aug-16');
-INSERT INTO EVENT values(4, 5, 6, 'm', '19-Aug-16');
-INSERT INTO EVENT values(5, 6, 5, 'm', '10-Aug-12');
+INSERT INTO EVENT values(4, 5, 6, 'm', '20-Aug-16');
+INSERT INTO EVENT values(5, 6, 7, 'm', '10-Aug-12');
 INSERT INTO EVENT values(6, 1, 6, 'm', '23-Aug-16');
 INSERT INTO EVENT values(7, 1, 4, 'm', '10-Aug-12');
 INSERT INTO EVENT values(8, 1, 2, 'm', '18-Aug-08');

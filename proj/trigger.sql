@@ -149,7 +149,8 @@ DECLARE
     capacity_reached_exception EXCEPTION;
 BEGIN
     SELECT COUNT, NVL(CAPACITY, 0) INTO e_count, e_capacity
-    FROM V_VENUE_COUNT WHERE VENUE_ID = :new.venue_id;
+    FROM V_VENUE_COUNT
+    WHERE VENUE_ID = :new.venue_id AND EVENT_TIME = :new.event_time;
 
     IF e_count + 1 > e_capacity THEN
         RAISE capacity_reached_exception;
@@ -158,11 +159,33 @@ END;
 
 
 CREATE OR REPLACE VIEW V_VENUE_COUNT AS
-SELECT V.VENUE_ID, COUNT, CAPACITY
-FROM (SELECT VENUE_ID, COUNT(*) as COUNT FROM EVENT GROUP BY VENUE_ID) VENUE_COUNT
+SELECT V.VENUE_ID, EVENT_TIME, COUNT, CAPACITY
+FROM (SELECT EVENT_TIME, VENUE_ID, COUNT(*) as COUNT FROM EVENT GROUP BY EVENT_TIME, VENUE_ID) VENUE_COUNT
 RIGHT JOIN VENUE V on VENUE_COUNT.VENUE_ID = V.VENUE_ID;
 
+
 -- We ensure that an event is in the correct venue for the correct olympics
+CREATE OR REPLACE TRIGGER VENUE_CHECK
+BEFORE INSERT OR UPDATE ON EVENT_PARTICIPATION
+FOR EACH ROW
+DECLARE
+    the_olympic_id number;
+    the_venue_olympic_id number;
+    incorrect_olympic_exception EXCEPTION;
+BEGIN
+    SELECT olympic_id INTO the_olympic_id FROM TEAM WHERE TEAM_ID = :new.team_id;
+
+    SELECT olympic_id INTO the_venue_olympic_id FROM VENUE WHERE VENUE_ID = (
+        SELECT VENUE_ID FROM EVENT WHERE EVENT.EVENT_ID = :new.event_id
+    );
+
+    IF the_olympic_id <> the_venue_olympic_id THEN
+        DBMS_OUTPUT.PUT_LINE('The event is occuring at a venue that is for a different olympics');
+        RAISE incorrect_olympic_exception;
+    end if;
+END;
+
+-- Ensure events occur at correct venue
 CREATE OR REPLACE TRIGGER VENUE_CHECK
 BEFORE INSERT OR UPDATE ON EVENT_PARTICIPATION
 FOR EACH ROW
@@ -190,9 +213,19 @@ DECLARE
     status char;
     ineligible_team_exception EXCEPTION;
 BEGIN
-    SELECT status INTO status FROM EVENT_PARTICIPATION WHERE event_id = :new.event_id;
+    SELECT status INTO status FROM EVENT_PARTICIPATION
+        WHERE event_id = :new.event_id
+        AND team_id = :new.team_id;
     IF status = 'n' THEN
         DBMS_OUTPUT.PUT_LINE('Team is ineligible.');
         RAISE ineligible_team_exception;
     end if;
+end;
+
+-- Set a new user's last login to the current sys timestamp
+CREATE OR REPLACE TRIGGER SET_USER_LAST_LOGIN
+BEFORE INSERT ON USER_ACCOUNT
+FOR EACH ROW
+BEGIN
+    SELECT SYSDATE INTO :new.last_login FROM dual;
 end;

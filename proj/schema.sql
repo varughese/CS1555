@@ -16,7 +16,8 @@ DROP TABLE EVENT_PARTICIPATION CASCADE CONSTRAINTS;
 -- we have athletes login to the system using the Guest role in USER_ROLE.
 CREATE TABLE USER_ROLE(
     role_id integer not null primary key,
-    role_name varchar2(20)
+    role_name varchar2(20) not null,
+    check ( role_id > 1 )
 );
 
 -- CREATE USER_ACCOUNT TABLE
@@ -25,7 +26,7 @@ CREATE TABLE USER_ACCOUNT(
     username varchar2(30) unique not null,
     passkey varchar2(20) not null,
     role_id integer not null,
-    last_login date,
+    last_login date not null,
 
     CONSTRAINT fk_user_account_role_id FOREIGN KEY(role_id) REFERENCES USER_ROLE(role_id)
 );
@@ -33,11 +34,11 @@ CREATE TABLE USER_ACCOUNT(
 -- CREATE OLYMPICS TABLE
 CREATE TABLE OLYMPICS(
     olympic_id integer not null primary key,
-    olympic_num varchar2(30) unique,
-    host_city varchar2(30),
-    opening_date date,
-    closing_date date,
-    official_website varchar2(50),
+    olympic_num varchar2(30) unique not null,
+    host_city varchar2(30) not null,
+    opening_date date not null,
+    closing_date date not null,
+    official_website varchar2(50) not null,
 
     CHECK (closing_date > opening_date)
 );
@@ -54,28 +55,28 @@ CREATE TABLE SPORT(
 -- CREATE PARTICIPANT TABLE
 CREATE TABLE PARTICIPANT(
     participant_id integer primary key not null,
-    fname varchar2(30),
-    lname varchar2(30),
-    nationality varchar2(20),
-    birth_place varchar2(40),
-    dob date
+    fname varchar2(30) not null,
+    lname varchar2(30) not null,
+    nationality varchar2(20) not null,
+    birth_place varchar2(40) not null,
+    dob date not null
 );
 
 -- CREATE COUNTRY TABLE
 CREATE TABLE COUNTRY(
     country_id integer not null primary key,
-    country varchar2(20),
-    country_code varchar2(3)
+    country varchar2(20) unique,
+    country_code varchar2(3) unique not null
 );
 
 -- CREATE TEAM TABLE
 CREATE TABLE TEAM(
     team_id integer not null primary key,
-    olympic_id integer,
-    team_name varchar2(50),
-    country_id integer,
-    sport_id integer,
-    coach_id integer,
+    olympic_id integer not null,
+    team_name varchar2(50) not null,
+    country_id integer not null,
+    sport_id integer not null,
+    coach_id integer not null,
     CONSTRAINT fk_team_olympic_id FOREIGN KEY (olympic_id) REFERENCES OLYMPICS(olympic_id),
     CONSTRAINT fk_team_country_id FOREIGN KEY (country_id) REFERENCES COUNTRY(country_id),
     CONSTRAINT fk_team_sport_id FOREIGN KEY (sport_id) REFERENCES SPORT(sport_id),
@@ -94,10 +95,11 @@ CREATE TABLE TEAM_MEMBER(
 -- CREATE TABLE VENUE
 CREATE TABLE VENUE(
     venue_id integer not null primary key,
-    olympic_id integer,
-    venue_name varchar2(30),
-    capacity integer,
-    CONSTRAINT fk_venue_olympic_id FOREIGN KEY (olympic_id) REFERENCES OLYMPICS(olympic_id)
+    olympic_id integer not null,
+    venue_name varchar2(30) not null,
+    capacity integer not null,
+    CONSTRAINT fk_venue_olympic_id FOREIGN KEY (olympic_id) REFERENCES OLYMPICS(olympic_id),
+    CHECK ( capacity > 0 )
 );
 
 -- CREATE TABLE EVENT
@@ -106,7 +108,7 @@ CREATE TABLE EVENT(
     sport_id integer not null,
     venue_id integer not null,
     gender char not null,
-    event_time date,
+    event_time date not null,
     CONSTRAINT fk_event_sport_id FOREIGN KEY (sport_id) REFERENCES SPORT(sport_id),
     CONSTRAINT fk_event_venue_id FOREIGN KEY (venue_id) REFERENCES VENUE(venue_id),
     CHECK (gender IN ('m', 'f'))
@@ -114,9 +116,9 @@ CREATE TABLE EVENT(
 
 -- CREATE EVENT_PARTICIPATION TABLE
 CREATE TABLE EVENT_PARTICIPATION(
-    event_id integer,
-    team_id integer,
-    status char,
+    event_id integer not null,
+    team_id integer not null,
+    status char not null,
     CHECK(status IN ('e', 'n')),
     CONSTRAINT pk_event_participation PRIMARY KEY (event_id, team_id),
     CONSTRAINT fk_event_participation_e FOREIGN KEY (event_id) REFERENCES EVENT(event_id),
@@ -136,11 +138,12 @@ CREATE TABLE SCOREBOARD(
     event_id integer not null,
     team_id integer not null,
     participant_id integer not null,
-    position integer,
+    position integer not null,
     medal_id integer,
     CONSTRAINT pk_scoreboard PRIMARY KEY (olympic_id, event_id, team_id, participant_id),
     CONSTRAINT fk_scoreboard_olympic_id FOREIGN KEY (olympic_id) REFERENCES OLYMPICS(olympic_id),
     CONSTRAINT fk_scoreboard_event_id FOREIGN KEY (event_id) REFERENCES EVENT(event_id),
+    CONSTRAINT fk_scoreboard_event_particp FOREIGN KEY (event_id, team_id) REFERENCES EVENT_PARTICIPATION(event_id, team_id),
     CONSTRAINT fk_scoreboard_team_participant FOREIGN KEY (team_id, participant_id) REFERENCES TEAM_MEMBER(team_id, participant_id),
     CONSTRAINT fk_scoreboard_medal_id FOREIGN KEY (medal_id) REFERENCES MEDAL(medal_id)
 );
