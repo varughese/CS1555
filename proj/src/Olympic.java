@@ -307,12 +307,26 @@ public class Olympic {
      the country participated in the Olympics (first registered in the DB) along with the number
      of gold, silver and bronze medals and their ranking sorted in descending order. The rank is
      computed based on the points associated with each metal. */
-    public static void countryRanking() throws SQLException {
-        if (loggedInUser == null) return;
+    public static ArrayList<List<String>> countryRanking(int olympic_id) throws SQLException {
+        if (loggedInUser == null) return null;
         Connection connection = startConnection();
-        // TODO
-        PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
+        PreparedStatement stmt = connection.prepareStatement("SELECT RANK, COUNTRY_CODE, GOLD, SILVER, BRONZE, FIRST_YEAR FROM V_COUNTRY_RANKING WHERE olympic_id = ?");
+        stmt.setInt(1, olympic_id);
+        ResultSet rs = stmt.executeQuery();
+        ArrayList<List<String>> results = new ArrayList<List<String>>(50);
+        results.add(Arrays.asList("Rank", "Country", "Gold", "Silver", "Bronze", "First Year"));
+        while(rs.next()) {
+            results.add(Arrays.asList(
+                    rs.getString("rank"),
+                    rs.getString("country_code"),
+                    rs.getString("gold"),
+                    rs.getString("silver"),
+                    rs.getString("bronze"),
+                    rs.getString("first_year")
+            ));
+        }
         connection.close();
+        return results;
     }
 
     /** Given an olympic id and a number k, display the top-k athletes based on their rank along with

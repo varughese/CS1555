@@ -83,6 +83,9 @@ public class Driver {
         assert_(res.size() > 0, "Displays results for event id 213");
         Olympic.CLI.prettyPrintResults(res);
 
+        res = Olympic.countryRanking(2);
+        assert_(res.size() > 0, "Displays country rankings");
+        Olympic.CLI.prettyPrintResults(res);
     }
 
     public static void main(String[] args) {
