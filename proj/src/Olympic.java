@@ -1,8 +1,7 @@
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.*;
 import java.util.Date;
 
 public class Olympic {
@@ -256,24 +255,25 @@ public class Olympic {
     /** Given a sport name, it displays the Olympic year it was added, events of that sport, gender, the
      medals winners and their countries. (athletes who got medals should be displayed first according
      to medals i.e., gold, silver and bronze and sorted on the Olympic year). */
-    public static ArrayList<String> displaySport(String sportName) throws SQLException {
+    public static ArrayList<List<String>> displaySport(String sportName) throws SQLException {
         if (loggedInUser == null) return null;
         Connection connection = startConnection();
         PreparedStatement stmt = connection.prepareStatement("select * from DISPLAY_SPORT_INFO where lower(SPORT_NAME) = lower(?)");
         stmt.setString(1, sportName);
         ResultSet rs = stmt.executeQuery();
-        ArrayList<String> results = new ArrayList<String>(50);
+        ArrayList<List<String>> results = new ArrayList<List<String>>(50);
         while(rs.next()) {
-            String row = rs.getString("sport_name") + "\t"
-            + rs.getString("year_added") + "\t"
-            + rs.getString("event_id") + "\t"
-            + rs.getString("gender") + "\t"
-            + rs.getString("team_id") + "\t"
-            + rs.getString("team_name") + "\t"
-            + rs.getString("name") + "\t"
-            + rs.getString("country") + "\t"
-            + rs.getString("medal") + "\t";
-            results.add(row);
+            results.add(Arrays.asList(
+                    rs.getString("sport_name"),
+                    rs.getString("year_added"),
+                    rs.getString("event_id"),
+                    rs.getString("gender"),
+                    rs.getString("team_id"),
+                    rs.getString("team_name"),
+                    rs.getString("name"),
+                    rs.getString("country"),
+                    rs.getString("medal")
+            ));
         }
         connection.close();
         return results;
@@ -281,21 +281,22 @@ public class Olympic {
 
     /** Given an Olympic game (City, Year) and an event id, display the Olympic game, event name,
      participant and the position along with the earned medal. */
-    public static ArrayList<String> displayEvent(int event_id) throws SQLException {
+    public static ArrayList<List<String>> displayEvent(int event_id) throws SQLException {
         // As said on Piazza, we do not need the olympic ID since that is implicitly given in the event id
         if (loggedInUser == null) return null;
         Connection connection = startConnection();
         PreparedStatement stmt = connection.prepareStatement("select * from DISPLAY_SPORT_INFO where event_id = ?");
         stmt.setInt(1, event_id);
         ResultSet rs = stmt.executeQuery();
-        ArrayList<String> results = new ArrayList<String>(50);
+        ArrayList<List<String>> results = new ArrayList<List<String>>(50);
         while(rs.next()) {
-            String row = rs.getString("OLYMPIC_NUM") + "\t"
-                    + rs.getString("sport_name") + "\t"
-                    + rs.getString("name") + "\t"
-                    + rs.getString("position") + "\t"
-                    + rs.getString("medal") + "\t";
-            results.add(row);
+            results.add(Arrays.asList(
+                rs.getString("OLYMPIC_NUM"),
+                rs.getString("sport_name"),
+                rs.getString("name"),
+                rs.getString("position"),
+                rs.getString("medal")
+            ));
         }
         connection.close();
         return results;
@@ -768,5 +769,17 @@ public class Olympic {
             return loggedInUser.getOperationFromMenuItemInput(choice);
         }
 
+
+
+
+        public static void prettyPrintResults(ArrayList<ArrayList<String>> results) {
+            // This assumes a filled 2D array
+            char BORDER_C = '+';
+            char BORDER_H = '-';
+            char BORDER_V = '|';
+            int[] widths = new int[]
+        }
+
+        private static
     }
 }
