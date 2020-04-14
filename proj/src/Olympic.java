@@ -281,12 +281,24 @@ public class Olympic {
 
     /** Given an Olympic game (City, Year) and an event id, display the Olympic game, event name,
      participant and the position along with the earned medal. */
-    public static void displayEvent() throws SQLException {
-        if (loggedInUser == null) return;
+    public static ArrayList<String> displayEvent(int event_id) throws SQLException {
+        // As said on Piazza, we do not need the olympic ID since that is implicitly given in the event id
+        if (loggedInUser == null) return null;
         Connection connection = startConnection();
-        // TODO
-        PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
+        PreparedStatement stmt = connection.prepareStatement("select * from DISPLAY_SPORT_INFO where event_id = ?");
+        stmt.setInt(1, event_id);
+        ResultSet rs = stmt.executeQuery();
+        ArrayList<String> results = new ArrayList<String>(50);
+        while(rs.next()) {
+            String row = rs.getString("OLYMPIC_NUM") + "\t"
+                    + rs.getString("sport_name") + "\t"
+                    + rs.getString("name") + "\t"
+                    + rs.getString("position") + "\t"
+                    + rs.getString("medal") + "\t";
+            results.add(row);
+        }
         connection.close();
+        return results;
     }
 
     /** Given an olympic id, display all the participating countries (country abbreviation), the first year

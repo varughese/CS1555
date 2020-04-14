@@ -73,10 +73,15 @@ public class Driver {
                 "Deletes team member (participant id " + participant_id + ")");
     }
 
-    public static void displaySport() throws SQLException {
+    public static void displays() throws SQLException {
         ArrayList<String> res = Olympic.displaySport("400m");
         assert_(res.size() > 0, "Displays results for 400m");
         System.out.println(res.toString());
+
+        res = Olympic.displayEvent(213);
+        assert_(res.size() > 0, "Displays results for event id 213");
+        System.out.println(res.toString());
+
     }
 
     public static void main(String[] args) {
@@ -86,7 +91,7 @@ public class Driver {
 //            testUserCreateDrop();
             Olympic.login("guest", "GUEST");
 //            testTeamAndEvent();
-            displaySport();
+            displays();
         } catch (SQLException e1) {
             System.out.println("SQL Error");
             while (e1 != null) {

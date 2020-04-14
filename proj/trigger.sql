@@ -289,7 +289,9 @@ select SPORT_NAME, EXTRACT(year from sport.DOB) AS YEAR_ADDED, event.event_id,
        t.team_id,
        TEAM_NAME, FNAME || ' ' || LNAME as name,
        COUNTRY_CODE AS COUNTRY,
-       UPPER(MEDAL_TITLE) AS medal
+       UPPER(MEDAL_TITLE) AS medal,
+       OLYMPIC_NUM,
+       POSITION
 from SPORT JOIN EVENT ON sport.sport_id = event.sport_id
 JOIN SCOREBOARD ON SCOREBOARD.EVENT_ID = event.EVENT_ID
 JOIN TEAM T on SCOREBOARD.TEAM_ID = T.TEAM_ID
