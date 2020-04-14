@@ -1,5 +1,12 @@
 ----------------
 -- Auto incrementing IDs triggers
+DROP SEQUENCE user_accounts_sequence;
+DROP SEQUENCE olympics_sequence;
+DROP SEQUENCE sport_sequence;
+DROP SEQUENCE team_sequence;
+DROP SEQUENCE venue_sequence;
+DROP SEQUENCE event_sequence;
+DROP SEQUENCE participant_sequence;
 CREATE SEQUENCE user_accounts_sequence start with 200;
 CREATE SEQUENCE olympics_sequence start with 200;
 CREATE SEQUENCE sport_sequence start with 200;
@@ -177,15 +184,30 @@ FROM (SELECT EVENT_TIME, VENUE_ID, COUNT(*) as COUNT FROM EVENT GROUP BY EVENT_T
 RIGHT JOIN VENUE V on VENUE_COUNT.VENUE_ID = V.VENUE_ID;
 
 
--- Set a team's eligibility based on all of its team members
-CREATE OR REPLACE TRIGGER REGISTER_TEAM_ELLIGIBILITY
+-- Ensure a team has the correct number of players for a sporting event they participate in
+CREATE OR REPLACE TRIGGER ENFORCE_TEAM_MEMBER_COUNT
     BEFORE INSERT OR UPDATE ON EVENT_PARTICIPATION
     FOR EACH ROW
+DECLARE
+    max_team_size number;
+    current_team_size number;
+    too_many_team_members exception;
 BEGIN
--- TODO
+    SELECT TEAM_SIZE into max_team_size FROM V_EVENT_TEAM_SIZE WHERE EVENT_ID = :new.event_id;
+    SELECT MEMBERS into current_team_size FROM V_TEAM_CURRENT_MEMBER_COUNT WHERE TEAM_ID = :new.team_id;
+    IF current_team_size - 1 > max_team_size THEN
+        -- we do minus 1 since coaches count as team member but do not participate!
+        raise too_many_team_members;
+    end if;
 end;
 
+CREATE OR REPLACE VIEW V_EVENT_TEAM_SIZE AS
+SELECT EVENT_ID, TEAM_SIZE FROM SPORT S JOIN EVENT E ON S.SPORT_ID = E.SPORT_ID;
 
+CREATE OR REPLACE VIEW V_TEAM_CURRENT_MEMBER_COUNT AS
+SELECT TEAM.TEAM_ID, COUNT(PARTICIPANT.PARTICIPANT_ID) AS MEMBERS
+FROM PARTICIPANT JOIN TEAM_MEMBER ON PARTICIPANT.PARTICIPANT_ID = TEAM_MEMBER.PARTICIPANT_ID
+JOIN TEAM ON TEAM_MEMBER.TEAM_ID = TEAM.TEAM_ID GROUP BY TEAM.TEAM_ID;
 
 -- We ensure that an event is in the correct venue for the correct olympics
 CREATE OR REPLACE TRIGGER VENUE_CHECK
@@ -202,26 +224,6 @@ BEGIN
         SELECT VENUE_ID FROM EVENT WHERE EVENT.EVENT_ID = :new.event_id
     );
 
-    IF the_olympic_id <> the_venue_olympic_id THEN
-        DBMS_OUTPUT.PUT_LINE('The event is occuring at a venue that is for a different olympics');
-        RAISE incorrect_olympic_exception;
-    end if;
-END;
-
--- Ensure events occur at correct venue
-CREATE OR REPLACE TRIGGER VENUE_CHECK
-BEFORE INSERT OR UPDATE ON EVENT_PARTICIPATION
-FOR EACH ROW
-DECLARE
-    the_olympic_id number;
-    the_venue_id number;
-    the_venue_olympic_id number;
-    incorrect_olympic_exception EXCEPTION;
-BEGIN
-    SELECT olympic_id INTO the_olympic_id FROM TEAM WHERE TEAM_ID = :new.team_id;
-    SELECT olympic_id INTO the_venue_olympic_id FROM VENUE WHERE VENUE_ID = (
-        SELECT VENUE_ID INTO the_venue_id FROM EVENT WHERE EVENT.EVENT_ID = :new.event_id
-    );
     IF the_olympic_id <> the_venue_olympic_id THEN
         DBMS_OUTPUT.PUT_LINE('The event is occuring at a venue that is for a different olympics');
         RAISE incorrect_olympic_exception;

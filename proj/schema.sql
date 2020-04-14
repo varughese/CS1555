@@ -17,7 +17,7 @@ DROP TABLE EVENT_PARTICIPATION CASCADE CONSTRAINTS;
 CREATE TABLE USER_ROLE(
     role_id integer not null primary key,
     role_name varchar2(20) not null,
-    check ( role_id > 1 )
+    check ( role_id >= 1 )
 );
 
 -- CREATE USER_ACCOUNT TABLE
@@ -46,10 +46,11 @@ CREATE TABLE OLYMPICS(
 -- CREATE SPORT TABLE
 CREATE TABLE SPORT(
     sport_id integer not null primary key,
-    sport_name varchar2(30),
-    description varchar2(80),
+    sport_name varchar2(30) not null,
+    description varchar2(80) not null,
     dob date, -- This the date it became an olympic sport
-    team_size integer
+    team_size integer not null,
+    CHECK (team_size >= 1)
 );
 
 -- CREATE PARTICIPANT TABLE
