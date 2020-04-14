@@ -2,6 +2,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class Driver {
     public static void assert_(boolean b, String desc) {
@@ -74,13 +75,13 @@ public class Driver {
     }
 
     public static void displays() throws SQLException {
-        ArrayList<String> res = Olympic.displaySport("400m");
+        ArrayList<List<String>> res = Olympic.displaySport("400m");
         assert_(res.size() > 0, "Displays results for 400m");
-        System.out.println(res.toString());
+        Olympic.CLI.prettyPrintResults(res);
 
         res = Olympic.displayEvent(213);
         assert_(res.size() > 0, "Displays results for event id 213");
-        System.out.println(res.toString());
+        Olympic.CLI.prettyPrintResults(res);
 
     }
 

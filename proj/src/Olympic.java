@@ -262,6 +262,7 @@ public class Olympic {
         stmt.setString(1, sportName);
         ResultSet rs = stmt.executeQuery();
         ArrayList<List<String>> results = new ArrayList<List<String>>(50);
+        results.add(Arrays.asList("Sport", "Year Added", "Event ID", "Gender", "Team ID", "Name", "Country", "Medal"));
         while(rs.next()) {
             results.add(Arrays.asList(
                     rs.getString("sport_name"),
@@ -269,7 +270,6 @@ public class Olympic {
                     rs.getString("event_id"),
                     rs.getString("gender"),
                     rs.getString("team_id"),
-                    rs.getString("team_name"),
                     rs.getString("name"),
                     rs.getString("country"),
                     rs.getString("medal")
@@ -289,6 +289,7 @@ public class Olympic {
         stmt.setInt(1, event_id);
         ResultSet rs = stmt.executeQuery();
         ArrayList<List<String>> results = new ArrayList<List<String>>(50);
+        results.add(Arrays.asList("Olympic Game", "Sport", "Name", "Position", "Medal"));
         while(rs.next()) {
             results.add(Arrays.asList(
                 rs.getString("OLYMPIC_NUM"),
@@ -772,14 +773,52 @@ public class Olympic {
 
 
 
-        public static void prettyPrintResults(ArrayList<ArrayList<String>> results) {
-            // This assumes a filled 2D array
+        public static void prettyPrintResults(ArrayList<List<String>> table) {
+            // This assumes a filled 2D array. I would break this up into other
+            // functions if I was allowed to use other files, but to make it
+            // easier to roll up in Intellij, it all goes in here. Inspired by
+            // https://stackoverflow.com/questions/11383070/pretty-print-2d-array-in-java
             char BORDER_C = '+';
             char BORDER_H = '-';
             char BORDER_V = '|';
-            int[] widths = new int[]
-        }
+            int[] widths = new int[table.get(0).size()];
+            // Find column with longest string and store in widths array
+            for (List<String > row : table) {
+                if (row != null) {
+                    for (int c = 0; c < widths.length; c++ ) {
+                        String cell = row.get(c);
+                        int l = cell.length();
+                        if (widths[c] < l) {
+                            widths[c] = l;
+                        }
+                    }
+                }
+            }
 
-        private static
+            // Make a string like this: +---+---+----+ that matches the column lengths
+            final StringBuilder hBuilder = new StringBuilder(256);
+            hBuilder.append(BORDER_C);
+            for (int w : widths) {
+                for (int i = 0; i < w; i++) {
+                    hBuilder.append(BORDER_H);
+                }
+                hBuilder.append(BORDER_C);
+            }
+            String horizontalBorder = hBuilder.toString();
+            int lineLength = horizontalBorder.length();
+            // Print out each row
+            System.out.println(horizontalBorder);
+            for (List<String> row : table) {
+                if (row != null) {
+                    StringBuilder rowBuilder = new StringBuilder(lineLength).append(BORDER_V);
+                    for (int i = 0; i < widths.length; i++) {
+                        String paddedCellValue = String.format("%1$-" + widths[i] + "s", row.get(i));
+                        rowBuilder.append(paddedCellValue).append(BORDER_V);
+                    }
+                    System.out.println(rowBuilder.toString());
+                    System.out.println(horizontalBorder);
+                }
+            }
+        }
     }
 }
