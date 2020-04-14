@@ -1,6 +1,7 @@
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.Date;
 
@@ -255,12 +256,27 @@ public class Olympic {
     /** Given a sport name, it displays the Olympic year it was added, events of that sport, gender, the
      medals winners and their countries. (athletes who got medals should be displayed first according
      to medals i.e., gold, silver and bronze and sorted on the Olympic year). */
-    public static void displaySport() throws SQLException {
-        if (loggedInUser == null) return;
+    public static ArrayList<String> displaySport(String sportName) throws SQLException {
+        if (loggedInUser == null) return null;
         Connection connection = startConnection();
-        // TODO
-        PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
+        PreparedStatement stmt = connection.prepareStatement("select * from DISPLAY_SPORT_INFO where lower(SPORT_NAME) = lower(?)");
+        stmt.setString(1, sportName);
+        ResultSet rs = stmt.executeQuery();
+        ArrayList<String> results = new ArrayList<String>(50);
+        while(rs.next()) {
+            String row = rs.getString("sport_name") + "\t"
+            + rs.getString("year_added") + "\t"
+            + rs.getString("event_id") + "\t"
+            + rs.getString("gender") + "\t"
+            + rs.getString("team_id") + "\t"
+            + rs.getString("team_name") + "\t"
+            + rs.getString("name") + "\t"
+            + rs.getString("country") + "\t"
+            + rs.getString("medal") + "\t";
+            results.add(row);
+        }
         connection.close();
+        return results;
     }
 
     /** Given an Olympic game (City, Year) and an event id, display the Olympic game, event name,

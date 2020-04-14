@@ -278,3 +278,24 @@ BEGIN
 end;
 
 -- Example: CALL PROC_CREATE_TEAM('London', 2012, 'team test', 'USA', 4, 1);
+
+-- this gigantic join view is for displaying sports
+CREATE OR REPLACE VIEW DISPLAY_SPORT_INFO AS
+select SPORT_NAME, EXTRACT(year from sport.DOB) AS YEAR_ADDED, event.event_id,
+       CASE
+           WHEN gender = 'm' THEN 'Male'
+           WHEN gender = 'f' THEN 'Female'
+       END as gender,
+       t.team_id,
+       TEAM_NAME, FNAME || ' ' || LNAME as name,
+       COUNTRY_CODE AS COUNTRY,
+       UPPER(MEDAL_TITLE) AS medal
+from SPORT JOIN EVENT ON sport.sport_id = event.sport_id
+JOIN SCOREBOARD ON SCOREBOARD.EVENT_ID = event.EVENT_ID
+JOIN TEAM T on SCOREBOARD.TEAM_ID = T.TEAM_ID
+JOIN COUNTRY C2 on T.COUNTRY_ID = C2.COUNTRY_ID
+JOIN MEDAL M on SCOREBOARD.MEDAL_ID = M.MEDAL_ID
+JOIN PARTICIPANT P on SCOREBOARD.PARTICIPANT_ID = P.PARTICIPANT_ID
+JOIN OLYMPICS O on SCOREBOARD.OLYMPIC_ID = O.OLYMPIC_ID
+WHERE POSITION <= 3
+ORDER BY O.OPENING_DATE, POSITION;
