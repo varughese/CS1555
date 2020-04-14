@@ -86,6 +86,10 @@ public class Driver {
         res = Olympic.countryRanking(2);
         assert_(res.size() > 0, "Displays country rankings");
         Olympic.CLI.prettyPrintResults(res);
+
+        res = Olympic.topkAthletes(2, 10);
+        assert_(res.size() > 0, "Displays top k athletes");
+        Olympic.CLI.prettyPrintResults(res);
     }
 
     public static void main(String[] args) {

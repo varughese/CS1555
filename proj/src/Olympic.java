@@ -332,12 +332,28 @@ public class Olympic {
     /** Given an olympic id and a number k, display the top-k athletes based on their rank along with
      the number of gold, silver and bronze medals in a descending order of their rank. The rank is
      computed based on the points associated with each metal */
-    public static void topkAthletes() throws SQLException {
-        if (loggedInUser == null) return;
+    public static ArrayList<List<String>> topkAthletes(int olympic_id, int k) throws SQLException {
+        if (loggedInUser == null) return null;
         Connection connection = startConnection();
-        // TODO
-        PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
+        String partialStmt = "SELECT RANK, NAME, GOLD, SILVER, BRONZE FROM V_PARTICIPANTS_RANKING";
+        String qualifiersStmt = " WHERE OLYMPIC_ID = ? ORDER BY RANK FETCH NEXT ? ROWS ONLY";
+        PreparedStatement stmt = connection.prepareStatement(partialStmt + qualifiersStmt);
+        stmt.setInt(1, olympic_id);
+        stmt.setInt(2, k);
+        ResultSet rs = stmt.executeQuery();
+        ArrayList<List<String>> results = new ArrayList<List<String>>(50);
+        results.add(Arrays.asList("Rank", "Name", "Gold", "Silver", "Bronze"));
+        while(rs.next()) {
+            results.add(Arrays.asList(
+                    rs.getString("rank"),
+                    rs.getString("name"),
+                    rs.getString("gold"),
+                    rs.getString("silver"),
+                    rs.getString("bronze")
+            ));
+        }
         connection.close();
+        return results;
     }
 
     /**  Given an athlete, a olympic id and a number n, find all the athletes who
@@ -418,7 +434,7 @@ public class Olympic {
                 System.out.println("What type of user are they?");
                 System.out.println("\t1. Organizer\n\t2. Coach.");
                 System.out.println("All guests can log into the system with username guest and password GUEST.");
-                int choice = CLI.getUserOption(1, 2);
+                int choice = CLI.getUserInt(1, 2);
                 UserType userType = choice == 1 ? UserType.ORGANIZER : UserType.COACH;
                 System.out.println("Creating user ... ");
                 try {
@@ -453,11 +469,11 @@ public class Olympic {
 
             case CREATE_TEAM: {
                 String olympicCity = CLI.getUserString("Olympic City", 30);
-                int olympicYear = CLI.getUserOption("Olympic Year", 1900, 2090);
+                int olympicYear = CLI.getUserInt("Olympic Year", 1900, 2090);
                 String teamName = CLI.getUserString("Team Name", 50);
                 String country = CLI.getUserString("Country (3 Letter Code)", 10);
-                int sportId = CLI.getUserOption("Sport ID", 0, Integer.MAX_VALUE);
-                int coachId = CLI.getUserOption("Coach ID", 0, Integer.MAX_VALUE);
+                int sportId = CLI.getUserInt("Sport ID", 0, Integer.MAX_VALUE);
+                int coachId = CLI.getUserInt("Coach ID", 0, Integer.MAX_VALUE);
                 try {
                     int team_id = createTeam(olympicCity, olympicYear, teamName, country, sportId, coachId);
                     System.out.println("Created! Their team id is " + team_id);
@@ -667,7 +683,7 @@ public class Olympic {
 
     // CLI Layer - this handles the user interfaces
     public static class CLI {
-        private static int getUserOption(String prompt, int minChoice, int maxChoice) {
+        private static int getUserInt(String prompt, int minChoice, int maxChoice) {
             System.out.print(prompt + ": ");
             int choice = Integer.MIN_VALUE;
 
@@ -694,8 +710,8 @@ public class Olympic {
             return choice;
         }
 
-        private static int getUserOption(int minChoice, int maxChoice) {
-            return getUserOption("\nEnter choice", minChoice, maxChoice);
+        private static int getUserInt(int minChoice, int maxChoice) {
+            return getUserInt("\nEnter choice", minChoice, maxChoice);
         }
 
 
@@ -741,7 +757,7 @@ public class Olympic {
             System.out.println("1. " + Operation.LOGIN.description);
             System.out.println("2. " + Operation.EXIT.description);
 
-            int choice = getUserOption(1, 2);
+            int choice = getUserInt(1, 2);
 
             if (choice == 2) {
                 return Operation.EXIT;
@@ -780,16 +796,22 @@ public class Olympic {
                 System.out.println(no + ". " + ops[i].description);
             }
 
-            int choice = getUserOption(1, ops.length);
+            int choice = getUserInt(1, ops.length);
             return loggedInUser.getOperationFromMenuItemInput(choice);
         }
 
 
-
-
         public static void prettyPrintResults(ArrayList<List<String>> table) {
-            // This assumes a filled 2D array. I would break this up into other
-            // functions if I was allowed to use other files, but to make it
+            // This prints out a "table" of data neatly like:
+            // +-----+----------+--------+------+-------+-----------------+-------+------+
+            // |Sport|Year Added|Event ID|Gender|Team ID|Name             |Country|Medal |
+            // +-----+----------+--------+------+-------+-----------------+-------+------+
+            // |400M |1896      |9       |Male  |34     |Jeremy Wariner   |USA    |GOLD  |
+            // +-----+----------+--------+------+-------+-----------------+-------+------+
+            // |400M |1896      |9       |Male  |35     |Otis Harris      |USA    |SILVER|
+            // +-----+----------+--------+------+-------+-----------------+-------+------+
+            // I would break this up into other
+            // functions if I was allowed to use other class files, but to make it
             // easier to roll up in Intellij, it all goes in here. Inspired by
             // https://stackoverflow.com/questions/11383070/pretty-print-2d-array-in-java
             char BORDER_C = '+';
