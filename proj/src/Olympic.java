@@ -94,6 +94,9 @@ public class Olympic {
      event to the system */
     public static int createEvent(int sport_id, int venue_id, Date event_date, char gender) throws SQLException {
         if (loggedInUser == null) return -7;
+        if (gender != 'm' && gender != 'f') {
+            gender  = 'f';
+        }
         Connection connection = startConnection();
         PreparedStatement stmt = connection.prepareStatement("INSERT INTO event values(null, ?, ?, ?, ?)");
         stmt.setInt(1, sport_id);
@@ -496,11 +499,19 @@ public class Olympic {
                 break;
             }
 
-            case CREATE_EVENT:
-                System.out.println("TODO - " + op);
+            case CREATE_EVENT: {
+                int sportId = CLI.getUserInt("Sport ID", 0, Integer.MAX_VALUE);
+                int venueId = CLI.getUserInt("Venue ID", 0, Integer.MAX_VALUE);
+                String gender = CLI.getUserString("Male (m) or Female (f)", 1).toLowerCase();
                 Date eventTime = CLI.getUserDate();
+                try {
+                    int event_id = createEvent(sportId, venueId, eventTime, gender.charAt(0));
+                    System.out.println("Created! THe event id is " + event_id);
+                } catch (SQLException e) {
+                    System.out.println("Sorry, that did not work. Carefully check all of your inputs and make sure they are valid.");
+                }
                 break;
-
+            }
             case ADD_EVENT_OUTCOME:
                 System.out.println("TODO - " + op);
                 break;
@@ -741,7 +752,7 @@ public class Olympic {
                 if (choice != Integer.MIN_VALUE) {
                     // Display this if the use integers a non int, or an int that is
                     // out of bounds
-                    System.out.print("That was not a valid option! \nEnter choice:");
+                    System.out.print("That was not a valid option! \n" + prompt+": ");
                 }
                 if (sc.hasNextInt()) {
                     choice = sc.nextInt();
@@ -774,20 +785,15 @@ public class Olympic {
         }
 
         private static Date getUserDate() {
-            System.out.println("Enter in a date, like yyyy/MM/dd");
-            String str[] = {"year", "month", "day" };
-            String date = "";
-
-            for(int i=0; i<3; i++) {
-                System.out.println("Enter " + str[i] + ": ");
-                date = date + sc.next() + "/";
-            }
-            date = date.substring(0, date.length()-1);
+            System.out.println("Enter in a date!");
+            int year = getUserInt("Year", 1900, 2090);
+            int month = getUserInt("Month", 1, 12);
+            int day = getUserInt("Day", 1, 30);
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
             Date parsedDate;
 
             try {
-                parsedDate = dateFormat.parse(date);
+                parsedDate = dateFormat.parse(year + "/" + month + "/" + day);
             } catch (ParseException e) {
                 System.out.println("Sorry, you entered in an invalid date. Let's try again.");
                 return getUserDate();
