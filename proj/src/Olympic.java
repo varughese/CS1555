@@ -12,19 +12,33 @@ public class Olympic {
 
     private static Scanner sc = new Scanner(System.in);
 
-    /* I attempt to separate this application into three components. I designed it
-       this way to make testing easier.
+    /** I separated this application into three components. I designed it
+       this way to make testing easier. Since we only are allowed to have one
+       file, it makes it pretty hard to read.
 
        Database Logic
         - Handle preparation of SQL statements and talk to database
 
        Application Logic
         - Deciding which users can have what options, logging
-        - them in, and the glue between user input and talking to the database
+        - them in, and the glue between taking user input and talking to the database function
 
        The CLI Interface
         - Getting user input and displaying things to command line.
     */
+
+
+    /*********************************************************
+
+     _____       _______       ____           _____ ______
+    |  __ \   /\|__   __|/\   |  _ \   /\    / ____|  ____|
+    | |  | | /  \  | |  /  \  | |_) | /  \  | (___ | |__
+    | |  | |/ /\ \ | | / /\ \ |  _ < / /\ \  \___ \|  __|
+    | |__| / ____ \| |/ ____ \| |_) / ____ \ ____) | |____
+    |_____/_/    \_\_/_/    \_\____/_/    \_\_____/|______|
+
+
+     ********************************************************/
 
     private static Connection startConnection() {
         Connection connection = null;
@@ -362,12 +376,24 @@ public class Olympic {
      A, B, and C (A =/= B =/= C), then A and C are connected (1 hop apart), if A competes with B
      in the current Olympic games (olympic id) and C competed with B in the immediate previous
      Olympic (olympic id). */
-    public static void connectedAthletes() throws SQLException {
-        if (loggedInUser == null) return;
+    public static ArrayList<List<String>> connectedAthletes(int participant_id, int olympic_id, int n) throws SQLException {
+        int MAX_HOPS = 3; // Panos said this on Piazza
+        if (loggedInUser == null || n > MAX_HOPS || n < 0) return null;
         Connection connection = startConnection();
-        // TODO
-        PreparedStatement stmt = connection.prepareStatement("SELECT * FROM TABLE_NAME");
+        String stmtPart = "SELECT DISTINCT NAME2 from V_P" + n + "_COMPETED_WITH_EACH_OTHER";
+        PreparedStatement stmt = connection.prepareStatement(stmtPart + " WHERE pid1 = ? AND o1 = ?");
+        ArrayList<List<String>> results = new ArrayList<List<String>>(50);
+        stmt.setInt(1, participant_id);
+        stmt.setInt(2, olympic_id);
+        ResultSet rs = stmt.executeQuery();
+        results.add(Arrays.asList("Name"));
+        while(rs.next()) {
+            results.add(Arrays.asList(
+                    rs.getString("name2")
+            ));
+        }
         connection.close();
+        return results;
     }
 
     /** The function should return the user to the top level of the UI after marking the time of the
@@ -396,6 +422,19 @@ public class Olympic {
         System.out.println("Goodbye!");
     }
 
+    /********************************************
+
+              _____  _____
+        /\   |  __ \|  __ \
+       /  \  | |__) | |__) |
+      / /\ \ |  ___/|  ___/
+     / ____ \| |    | |
+    /_/    \_\_|    |_|
+
+     This section is the controller between the view and the database. It handles
+     business logic of the application.
+     *********************************************/
+
     public static void main(String args[]) {
         Operation currentOperation = CLI.displayWelcomeScreen();
 
@@ -420,7 +459,6 @@ public class Olympic {
         }
     }
 
-    // Application logic layer - this handles business logic of the application.
     public static void executeOperation(Operation op) throws SQLException {
         switch (op) {
             case LOGIN:
@@ -681,7 +719,18 @@ public class Olympic {
     }
 
 
-    // CLI Layer - this handles the user interfaces
+    /***************************************************
+      _____ _      _____
+     / ____| |    |_   _|
+    | |    | |      | |
+    | |    | |      | |
+    | |____| |____ _| |_
+     \_____|______|_____|
+
+
+     CLI Layer - this handles the user interfaces
+     ****************************************************/
+
     public static class CLI {
         private static int getUserInt(String prompt, int minChoice, int maxChoice) {
             System.out.print(prompt + ": ");
@@ -807,8 +856,6 @@ public class Olympic {
             // |Sport|Year Added|Event ID|Gender|Team ID|Name             |Country|Medal |
             // +-----+----------+--------+------+-------+-----------------+-------+------+
             // |400M |1896      |9       |Male  |34     |Jeremy Wariner   |USA    |GOLD  |
-            // +-----+----------+--------+------+-------+-----------------+-------+------+
-            // |400M |1896      |9       |Male  |35     |Otis Harris      |USA    |SILVER|
             // +-----+----------+--------+------+-------+-----------------+-------+------+
             // I would break this up into other
             // functions if I was allowed to use other class files, but to make it

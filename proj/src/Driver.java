@@ -90,6 +90,10 @@ public class Driver {
         res = Olympic.topkAthletes(2, 10);
         assert_(res.size() > 0, "Displays top k athletes");
         Olympic.CLI.prettyPrintResults(res);
+
+        res = Olympic.connectedAthletes(7, 3, 3);
+        assert_(res.size() > 0, "Displays connected athletes");
+        Olympic.CLI.prettyPrintResults(res);
     }
 
     public static void main(String[] args) {

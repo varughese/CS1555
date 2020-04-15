@@ -1,5 +1,6 @@
-----------------
--- Auto incrementing IDs triggers
+------------------------------------------------------
+------------------------------------------------------
+-- Auto incrementing IDs triggers  -------------------
 DROP SEQUENCE user_accounts_sequence;
 DROP SEQUENCE olympics_sequence;
 DROP SEQUENCE sport_sequence;
@@ -95,6 +96,11 @@ BEGIN
     END IF;
 END;
 
+------------------------------------------------------
+------------------------------------------------------
+-- Enforce constraints with triggers -----------------
+
+
 -- If new user account and role is guest, then set password to GUEST
 CREATE OR REPLACE TRIGGER SET_GUEST_PASSWORD
     BEFORE INSERT ON USER_ACCOUNT
@@ -143,7 +149,7 @@ BEGIN
             DELETE FROM TEAM WHERE TEAM_ID = currteam.TEAM_ID;
         ELSE
             -- If team size is greater than 1, we mark
-            DBMS_OUTPUT.PUT_LINE('Participants team is getting marked inelligible. '  || currteam.TEAM_ID);
+            DBMS_OUTPUT.PUT_LINE('Participants team is getting marked ineligible. '  || currteam.TEAM_ID);
             UPDATE EVENT_PARTICIPATION SET STATUS = 'n' WHERE TEAM_ID = currteam.TEAM_ID;
             DELETE FROM TEAM_MEMBER WHERE PARTICIPANT_ID = :old.participant_id;
         end if;
@@ -248,7 +254,6 @@ BEGIN
     end if;
 end;
 
--- Set a new user's last login to the current sys timestamp
 CREATE OR REPLACE TRIGGER SET_USER_LAST_LOGIN
 BEFORE INSERT ON USER_ACCOUNT
 FOR EACH ROW
@@ -256,6 +261,12 @@ BEGIN
     SELECT SYSDATE INTO :new.last_login FROM dual;
 end;
 
+------------------------------------------------------
+------------------------------------------------------
+-- Procedures that help with functions ---------------
+
+-- 16. logout - helper procedure
+-- Set a new user's last login to the current sys timestamp
 CREATE OR REPLACE PROCEDURE PROC_USER_LOGOUT(user_id_ number, username_ varchar2) AS
 BEGIN
     UPDATE USER_ACCOUNT
@@ -263,6 +274,8 @@ BEGIN
     WHERE USER_ID = user_id_ AND USERNAME = username_;
 END;
 
+-- 5. createTeam - helper procedure
+-- Example: CALL PROC_CREATE_TEAM('London', 2012, 'team test', 'USA', 4, 1);
 CREATE OR REPLACE PROCEDURE PROC_CREATE_TEAM(
     olympic_city_ varchar2,
     olympic_year_ number,
@@ -280,9 +293,8 @@ BEGIN
     INSERT INTO TEAM values(null, olympic_id_, team_name_, country_id_, sport_, coach_id_);
 end;
 
--- Example: CALL PROC_CREATE_TEAM('London', 2012, 'team test', 'USA', 4, 1);
-
--- this gigantic join view is for displaying sports
+-- 11. displaySport
+-- This gigantic view is for displaying sports
 CREATE OR REPLACE VIEW DISPLAY_SPORT_INFO AS
 select SPORT_NAME, EXTRACT(year from sport.DOB) AS YEAR_ADDED, event.event_id,
        CASE
@@ -306,6 +318,7 @@ WHERE POSITION <= 3
 ORDER BY O.OPENING_DATE, POSITION;
 
 ------------------------------------------------------------
+-- 13. countryRanking
 -- The follow views make it easier to do countryRanking()
 -- ASSUMPTION: Assume all countries competed in all olympics. I just did
 -- not include data for every single country for every single event for every
@@ -382,6 +395,7 @@ FROM V_COUNTRY_MEDAL_COUNT_BY_TYPE NATURAL JOIN
 
 
 ------------------------------------------------------------
+-- 14. topKAthletes
 -- The follow views make it easier to do topKAthletes()
 CREATE OR REPLACE VIEW V_SCOREBOARD_WITH_PARTICIPANT AS
 SELECT OLYMPIC_ID, S.PARTICIPANT_ID, FNAME || ' ' || LNAME AS NAME, POSITION, MEDAL_ID FROM SCOREBOARD S
@@ -397,7 +411,7 @@ GROUP BY OLYMPIC_ID, PARTICIPANT_ID, NAME, MEDAL_ID, MEDAL_TITLE)
 UNION
 (SELECT OLYMPIC_ID, PARTICIPANT_ID, FNAME || ' ' || LNAME AS NAME, MEDAL_ID, MEDAL_TITLE, 0 AS MEDAL_COUNT FROM OLYMPICS, PARTICIPANT, MEDAL))
 GROUP BY OLYMPIC_ID, PARTICIPANT_ID, NAME, MEDAL_ID, MEDAL_TITLE
-ORDER BY OLYMPIC_ID, MEDAL_COUNT DESC, NAME; -- TODO this counts participants that were not in a specific year, need to subtract that out
+ORDER BY OLYMPIC_ID, MEDAL_COUNT DESC, NAME;
 
 
 CREATE OR REPLACE VIEW V_PARTICIPANT_MEDAL_BY_TYPE AS
@@ -447,3 +461,54 @@ FROM (SELECT * FROM (V_PARTICIPANT_MEDAL_BY_TYPE NATURAL JOIN
      JOIN V_OLYMPIC_PARTICIPANT P ON R.OLYMPIC_ID = P.OLYMPIC_ID
 AND R.PARTICIPANT_ID = P.PARTICIPANT_ID
 ORDER BY OLYMPIC_ID, RANK;
+
+
+------------------------------------------------------------
+-- 15. connectedAthletes
+SELECT PARTICIPANT_ID, FNAME FROM PARTICIPANT;
+
+CREATE OR REPLACE VIEW V_PARTICIPANT_EVENT_TEAM AS
+SELECT OLYMPIC_ID, TEAM_ID, PARTICIPANT_ID, FNAME || ' ' || LNAME AS NAME
+    FROM TEAM_MEMBER TEAM_ID
+    NATURAL JOIN PARTICIPANT PARTICIPANT_ID
+    NATURAL JOIN TEAM TEAM_ID;
+
+-- 0 HOPS
+CREATE OR REPLACE VIEW V_P0_COMPETED_WITH_EACH_OTHER AS
+SELECT p1.PARTICIPANT_ID pid1, p1.name name1,  p1.OLYMPIC_ID o1, p2.name name2,  p2.PARTICIPANT_ID pid2, p2.OLYMPIC_ID o2
+FROM V_PARTICIPANT_EVENT_TEAM p1 JOIN
+V_PARTICIPANT_EVENT_TEAM p2 ON p1.OLYMPIC_ID = p2.OLYMPIC_ID AND p1.team_id <> p2.TEAM_ID;
+
+
+-- 1 HOP
+CREATE OR REPLACE VIEW V_P1_COMPETED_WITH_EACH_OTHER AS
+SELECT p1.PARTICIPANT_ID pid1, p1.name name1,  p1.OLYMPIC_ID o1, p4.name name2,  p4.PARTICIPANT_ID pid2, p4.OLYMPIC_ID o2
+FROM V_PARTICIPANT_EVENT_TEAM p1
+JOIN V_PARTICIPANT_EVENT_TEAM p2 ON p1.OLYMPIC_ID = p2.OLYMPIC_ID AND p1.team_id <> p2.TEAM_ID
+JOIN V_PARTICIPANT_EVENT_TEAM p3 ON p2.PARTICIPANT_ID = p3.PARTICIPANT_ID
+JOIN V_PARTICIPANT_EVENT_TEAM p4 ON p3.OLYMPIC_ID = p4.OLYMPIC_ID
+WHERE p1.OLYMPIC_ID = (p4.OLYMPIC_ID + 1);
+
+-- 2 HOPS
+CREATE OR REPLACE VIEW V_P2_COMPETED_WITH_EACH_OTHER AS
+SELECT p1.PARTICIPANT_ID pid1, p1.name name1,  p1.OLYMPIC_ID o1, p6.name name2,  p6.PARTICIPANT_ID pid2, p6.OLYMPIC_ID o2
+FROM V_PARTICIPANT_EVENT_TEAM p1
+JOIN V_PARTICIPANT_EVENT_TEAM p2 ON p1.OLYMPIC_ID = p2.OLYMPIC_ID AND p1.team_id <> p2.TEAM_ID
+JOIN V_PARTICIPANT_EVENT_TEAM p3 ON p2.PARTICIPANT_ID = p3.PARTICIPANT_ID
+JOIN V_PARTICIPANT_EVENT_TEAM p4 ON p3.OLYMPIC_ID = p4.OLYMPIC_ID
+JOIN V_PARTICIPANT_EVENT_TEAM p5 ON p4.PARTICIPANT_ID = p5.PARTICIPANT_ID
+JOIN V_PARTICIPANT_EVENT_TEAM p6 ON p5.OLYMPIC_ID = p6.OLYMPIC_ID
+WHERE p1.OLYMPIC_ID = (p6.OLYMPIC_ID + 2);
+
+-- 3 HOPS
+CREATE OR REPLACE VIEW V_P3_COMPETED_WITH_EACH_OTHER AS
+SELECT p1.PARTICIPANT_ID AS pid1, p1.name name1, p1.OLYMPIC_ID as o1, p8.PARTICIPANT_ID AS pid2, p8.name AS name2, p8.OLYMPIC_ID AS o2
+FROM V_PARTICIPANT_EVENT_TEAM p1
+JOIN V_PARTICIPANT_EVENT_TEAM p2 ON p1.OLYMPIC_ID = p2.OLYMPIC_ID AND p1.team_id <> p2.TEAM_ID
+JOIN V_PARTICIPANT_EVENT_TEAM p3 ON p2.PARTICIPANT_ID = p3.PARTICIPANT_ID
+JOIN V_PARTICIPANT_EVENT_TEAM p4 ON p3.OLYMPIC_ID = p4.OLYMPIC_ID
+JOIN V_PARTICIPANT_EVENT_TEAM p5 ON p4.PARTICIPANT_ID = p5.PARTICIPANT_ID
+JOIN V_PARTICIPANT_EVENT_TEAM p6 ON p5.OLYMPIC_ID = p6.OLYMPIC_ID
+JOIN V_PARTICIPANT_EVENT_TEAM p7 ON p6.PARTICIPANT_ID = p7.PARTICIPANT_ID
+JOIN V_PARTICIPANT_EVENT_TEAM p8 ON p7.OLYMPIC_ID = p8.OLYMPIC_ID
+WHERE p1.OLYMPIC_ID = (p8.OLYMPIC_ID + 3);
