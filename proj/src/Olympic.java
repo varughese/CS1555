@@ -275,16 +275,17 @@ public class Olympic {
     public static ArrayList<List<String>> displaySport(String sportName) throws SQLException {
         if (loggedInUser == null) return null;
         Connection connection = startConnection();
-        PreparedStatement stmt = connection.prepareStatement("select * from DISPLAY_SPORT_INFO where lower(SPORT_NAME) = lower(?)");
+        PreparedStatement stmt = connection.prepareStatement("select * from DISPLAY_SPORT_INFO where lower(SPORT_NAME) = lower(?) order by OLYMPIC_YEAR, EVENT_ID, POINTS DESC");
         stmt.setString(1, sportName);
         ResultSet rs = stmt.executeQuery();
         ArrayList<List<String>> results = new ArrayList<List<String>>(50);
-        results.add(Arrays.asList("Sport", "Year Added", "Event ID", "Gender", "Team ID", "Name", "Country", "Medal"));
+        results.add(Arrays.asList("Sport", "Year Added", "Event ID", "Olympics", "Gender", "Team ID", "Name", "Country", "Medal"));
         while(rs.next()) {
             results.add(Arrays.asList(
                     rs.getString("sport_name"),
                     rs.getString("year_added"),
                     rs.getString("event_id"),
+                    rs.getString("olympic_num"),
                     rs.getString("gender"),
                     rs.getString("team_id"),
                     rs.getString("name"),
@@ -300,6 +301,7 @@ public class Olympic {
      participant and the position along with the earned medal. */
     public static ArrayList<List<String>> displayEvent(int event_id) throws SQLException {
         // As said on Piazza, we do not need the olympic ID since that is implicitly given in the event id
+        // Look at 'createTeam' where I demonstrate how to use city and year to obtain an olympic ID.
         if (loggedInUser == null) return null;
         Connection connection = startConnection();
         PreparedStatement stmt = connection.prepareStatement("select * from DISPLAY_SPORT_INFO where event_id = ?");
@@ -442,141 +444,175 @@ public class Olympic {
         Operation currentOperation = CLI.displayWelcomeScreen();
 
         while (currentOperation != Operation.EXIT) {
-            try {
-                executeOperation(currentOperation);
-                System.out.println();
-                if (currentOperation == Operation.LOGOUT) {
-                    currentOperation = CLI.displayWelcomeScreen();
-                } else {
-                    currentOperation = CLI.displayUserMenu();
-                }
-            } catch (SQLException e) {
-                System.out.println("Hm. Something weird happened. Let's try again.");
+            executeOperation(currentOperation);
+            System.out.println();
+            if (currentOperation == Operation.LOGOUT) {
+                currentOperation = CLI.displayWelcomeScreen();
+            } else {
+                currentOperation = CLI.displayUserMenu();
             }
         }
 
-        try {
-            executeOperation(Operation.EXIT);
-        } catch (SQLException e) {
-            System.out.println("Error = " + e.getErrorCode());
-        }
+        executeOperation(Operation.EXIT);
     }
 
-    public static void executeOperation(Operation op) throws SQLException {
-        switch (op) {
-            case LOGIN:
-                CLI.promptLogin();
-                System.out.println(loggedInUser.getGreeting());
-                break;
+    public static void executeOperation(Operation op) {
+        String sqlErrorMessage = "Sorry, that did not work. Make sure your IDs are correct and try again";
+        try {
+            switch (op) {
+                case LOGIN:
+                    CLI.promptLogin();
+                    System.out.println(loggedInUser.getGreeting());
+                    break;
 
-            case CREATE_USER: {
-                String username = CLI.getUserString("Username", 30);
-                String passkey = CLI.getUserString("Password", 20);
-                System.out.println("What type of user are they?");
-                System.out.println("\t1. Organizer\n\t2. Coach.");
-                System.out.println("All guests can log into the system with username guest and password GUEST.");
-                int choice = CLI.getUserInt(1, 2);
-                UserType userType = choice == 1 ? UserType.ORGANIZER : UserType.COACH;
-                System.out.println("Creating user ... ");
-                try {
+                case CREATE_USER: {
+                    sqlErrorMessage = "Could not create user! Are you sure they exist?";
+                    String username = CLI.getUserString("Username", 30);
+                    String passkey = CLI.getUserString("Password", 20);
+                    System.out.println("What type of user are they?");
+                    System.out.println("\t1. Organizer\n\t2. Coach.");
+                    System.out.println("All guests can log into the system with username guest and password GUEST.");
+                    int choice = CLI.getUserInt(1, 2);
+                    UserType userType = choice == 1 ? UserType.ORGANIZER : UserType.COACH;
+                    System.out.println("Creating user ... ");
                     int user_id = createUser(username.trim(), passkey, userType);
                     System.out.println("Created! Their user id is " + user_id);
-                } catch (SQLException e) {
-                    System.out.println("Sorry, that user was not able to be created. Do they already exist?");
+                    break;
                 }
-                break;
-            }
 
-            case DROP_USER: {
-                String username = CLI.getUserString("Username", 30);
-                System.out.println("Deleting - " + username);
-                int deleted = dropUser(username);
-                if (deleted >= 1) {
-                    System.out.println("Deleted!");
-                } else {
-                    System.out.println("Did not find that user.");
+                case DROP_USER: {
+                    String username = CLI.getUserString("Username", 30);
+                    System.out.println("Deleting - " + username);
+                    int deleted = dropUser(username);
+                    if (deleted >= 1) {
+                        System.out.println("Deleted!");
+                    } else {
+                        System.out.println("Did not find that user.");
+                    }
+                    break;
                 }
-                break;
-            }
 
-            case CREATE_EVENT: {
-                int sportId = CLI.getUserInt("Sport ID", 0, Integer.MAX_VALUE);
-                int venueId = CLI.getUserInt("Venue ID", 0, Integer.MAX_VALUE);
-                String gender = CLI.getUserString("Male (m) or Female (f)", 1).toLowerCase();
-                Date eventTime = CLI.getUserDate();
-                try {
+                case CREATE_EVENT: {
+                    int sportId = CLI.getUserInt("Sport ID", 0, Integer.MAX_VALUE);
+                    int venueId = CLI.getUserInt("Venue ID", 0, Integer.MAX_VALUE);
+                    String gender = CLI.getUserString("Male (m) or Female (f)", 1).toLowerCase();
+                    Date eventTime = CLI.getUserDate("Event Time");
                     int event_id = createEvent(sportId, venueId, eventTime, gender.charAt(0));
-                    System.out.println("Created! THe event id is " + event_id);
-                } catch (SQLException e) {
-                    System.out.println("Sorry, that did not work. Carefully check all of your inputs and make sure they are valid.");
+                    System.out.println("Created! The event id is " + event_id);
+                    break;
                 }
-                break;
-            }
-            case ADD_EVENT_OUTCOME:
-                System.out.println("TODO - " + op);
-                break;
+                case ADD_EVENT_OUTCOME: {
+                    int olympicId = CLI.getUserInt("Olympic ID", 0, Integer.MAX_VALUE);
+                    int teamId = CLI.getUserInt("Team ID", 0, Integer.MAX_VALUE);
+                    int eventId = CLI.getUserInt("Event ID", 0, Integer.MAX_VALUE);
+                    int participantId = CLI.getUserInt("Participant ID", 0, Integer.MAX_VALUE);
+                    int position = CLI.getUserInt("Position", 1, 100);
+                    int added = addEventOutcome(olympicId, teamId, eventId, participantId, position);
+                    if (added < 1) throw new SQLException();
+                    System.out.println("Created!");
+                    break;
+                }
 
-            case CREATE_TEAM: {
-                String olympicCity = CLI.getUserString("Olympic City", 30);
-                int olympicYear = CLI.getUserInt("Olympic Year", 1900, 2090);
-                String teamName = CLI.getUserString("Team Name", 50);
-                String country = CLI.getUserString("Country (3 Letter Code)", 10);
-                int sportId = CLI.getUserInt("Sport ID", 0, Integer.MAX_VALUE);
-                int coachId = CLI.getUserInt("Coach ID", 0, Integer.MAX_VALUE);
-                try {
+                case CREATE_TEAM: {
+                    String olympicCity = CLI.getUserString("Olympic City", 30);
+                    int olympicYear = CLI.getUserInt("Olympic Year", 1900, 2090);
+                    String teamName = CLI.getUserString("Team Name", 50);
+                    String country = CLI.getUserString("Country (3 Letter Code)", 10);
+                    int sportId = CLI.getUserInt("Sport ID", 0, Integer.MAX_VALUE);
+                    int coachId = CLI.getUserInt("Coach ID", 0, Integer.MAX_VALUE);
                     int team_id = createTeam(olympicCity, olympicYear, teamName, country, sportId, coachId);
                     System.out.println("Created! Their team id is " + team_id);
-                } catch (SQLException e) {
-                    System.out.println("Sorry, that did not work. Carefully check all of your inputs and make sure they are correct.");
+                    break;
                 }
-                break;
+
+                case REGISTER_TEAM: {
+                    int teamId = CLI.getUserInt("Team ID", 0, Integer.MAX_VALUE);
+                    int eventId = CLI.getUserInt("Event ID", 0, Integer.MAX_VALUE);
+                    registerTeam(eventId, teamId);
+                    System.out.println("That team is registered!");
+                    break;
+                }
+
+                case ADD_PARTICIPANT: {
+                    String firstname = CLI.getUserString("First Name", 30);
+                    String lastname = CLI.getUserString("Last Name", 30);
+                    String nationality = CLI.getUserString("Nationality", 20);
+                    String birthPlace = CLI.getUserString("Birth Place", 40);
+                    Date dob = CLI.getUserDate("Date of Birth");
+                    int participantId = addParticipant(firstname, lastname, nationality, birthPlace, dob);
+                    System.out.println("Created! Their participant id is " + participantId);
+                    break;
+                }
+
+                case ADD_TEAM_MEMBER: {
+                    int teamId = CLI.getUserInt("Team ID", 0, Integer.MAX_VALUE);
+                    int participantId = CLI.getUserInt("Participant ID", 0, Integer.MAX_VALUE);
+                    addTeamMember(teamId, participantId);
+                    System.out.println("Added!");
+                    break;
+                }
+
+                case DROP_TEAM_MEMBER: {
+                    int participantId = CLI.getUserInt("Participant ID", 0, Integer.MAX_VALUE);
+                    int deleted = dropTeamMember(participantId);
+                    if (deleted >= 1) {
+                        System.out.println("Dropped!");
+                    } else {
+                        System.out.println("Could not drop. Is that a valid ID?");
+                    }
+                    break;
+                }
+
+                case DISPLAY_SPORT: {
+                    String sportName = CLI.getUserString("Sport Name", 30);
+                    CLI.prettyPrintResults(displaySport(sportName));
+                    CLI.promptUserToContinue();
+                    break;
+                }
+
+                case DISPLAY_EVENT: {
+                    int eventId = CLI.getUserInt("Event ID", 0, Integer.MAX_VALUE);
+                    CLI.prettyPrintResults(displayEvent(eventId));
+                    CLI.promptUserToContinue();
+                    break;
+                }
+
+                case COUNTRY_RANKING: {
+                    int olympicId = CLI.getUserInt("Olympic ID", 0, 1000);
+                    CLI.prettyPrintResults(Olympic.countryRanking(olympicId));
+                    CLI.promptUserToContinue();
+                    break;
+                }
+
+                case TOP_K_ATHLETES: {
+                    int olympicId = CLI.getUserInt("Olympic ID", 0, 1000);
+                    int k = CLI.getUserInt("k (as in, the top 'k')", 0, 10000);
+                    CLI.prettyPrintResults(Olympic.topkAthletes(olympicId, k));
+                    CLI.promptUserToContinue();
+                    break;
+                }
+
+                case CONNECTED_ATHLETES: {
+                    int participantId = CLI.getUserInt("Participant ID", 0, Integer.MAX_VALUE);
+                    int olympicId = CLI.getUserInt("Olympic ID", 0, 1000);
+                    int n = CLI.getUserInt("n (The total number of hops)", 0, 3);
+                    CLI.prettyPrintResults(Olympic.connectedAthletes(participantId, olympicId, n));
+                    CLI.promptUserToContinue();
+                    break;
+                }
+
+                case LOGOUT:
+                    logout();
+                    CLI.clearConsole();
+                    System.out.println("Logged you out!");
+                    break;
+
+                case EXIT:
+                    exit();
+                    break;
             }
-
-            case REGISTER_TEAM:
-                System.out.println("TODO - " + op);
-                break;
-
-            case ADD_PARTICIPANT:
-                System.out.println("TODO - " + op);
-                break;
-
-            case ADD_TEAM_MEMBER:
-                System.out.println("TODO - " + op);
-                break;
-
-            case DROP_TEAM_MEMBER:
-                System.out.println("TODO - " + op);
-                break;
-
-            case DISPLAY_SPORT:
-                System.out.println("TODO - " + op);
-                break;
-
-            case DISPLAY_EVENT:
-                System.out.println("TODO - " + op);
-                break;
-
-            case COUNTRY_RANKING:
-                System.out.println("TODO - " + op);
-                break;
-
-            case TOP_K_ATHLETES:
-                System.out.println("TODO - " + op);
-                break;
-
-            case CONNECTED_ATHLETES:
-                System.out.println("TODO - " + op);
-                break;
-
-            case LOGOUT:
-                logout();
-                CLI.clearConsole();
-                System.out.println("Logged you out!");
-                break;
-
-            case EXIT:
-                exit();
-                break;
+        } catch (SQLException e) {
+            System.out.println(sqlErrorMessage);
         }
     }
 
@@ -784,8 +820,8 @@ public class Olympic {
             return result;
         }
 
-        private static Date getUserDate() {
-            System.out.println("Enter in a date!");
+        private static Date getUserDate(String prompt) {
+            System.out.println(prompt);
             int year = getUserInt("Year", 1900, 2090);
             int month = getUserInt("Month", 1, 12);
             int day = getUserInt("Day", 1, 30);
@@ -796,9 +832,13 @@ public class Olympic {
                 parsedDate = dateFormat.parse(year + "/" + month + "/" + day);
             } catch (ParseException e) {
                 System.out.println("Sorry, you entered in an invalid date. Let's try again.");
-                return getUserDate();
+                return getUserDate(prompt);
             }
             return parsedDate;
+        }
+
+        private static void promptUserToContinue() {
+            getUserInt("\nPress '1' to continue", 0, 100);
         }
 
         private static void clearConsole() {
@@ -857,6 +897,10 @@ public class Olympic {
 
 
         public static void prettyPrintResults(ArrayList<List<String>> table) {
+            if (table == null || table.size() <= 1) {
+                System.out.println("No results found!\n");
+                return;
+            }
             // This prints out a "table" of data neatly like:
             // +-----+----------+--------+------+-------+-----------------+-------+------+
             // |Sport|Year Added|Event ID|Gender|Team ID|Name             |Country|Medal |
