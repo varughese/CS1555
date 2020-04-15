@@ -466,7 +466,7 @@ public class Olympic {
                     break;
 
                 case CREATE_USER: {
-                    sqlErrorMessage = "Could not create user! Are you sure they exist?";
+                    sqlErrorMessage = "Could not create user! Are you sure they do not already exist?";
                     String username = CLI.getUserString("Username", 30);
                     String passkey = CLI.getUserString("Password", 20);
                     System.out.println("What type of user are they?");
