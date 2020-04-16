@@ -204,8 +204,11 @@ BEGIN
         -- we do minus 1 since coaches count as team member but do not participate!
         raise too_many_team_members;
     end if;
-end;
-
+EXCEPTION
+  WHEN no_data_found
+  THEN
+    current_team_size := 0;
+END;
 
 CREATE OR REPLACE VIEW V_EVENT_TEAM_SIZE AS
 SELECT EVENT_ID, TEAM_SIZE FROM SPORT S JOIN EVENT E ON S.SPORT_ID = E.SPORT_ID;

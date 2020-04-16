@@ -16,6 +16,7 @@ To run Driver that runs Tests
 To run Olympics CLI
 `java -cp lib/ojdbc7.jar:src/ Olympic`
 
+Or, you can open the `proj.iml` file in `IntelliJ`, and compile and run the programs that way!
 
 
 

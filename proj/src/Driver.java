@@ -33,6 +33,7 @@ public class Driver {
     }
 
     public static void testUserCreateDrop() throws SQLException {
+        Olympic.dropUser("rakan");
         int user_id = Olympic.createUser("rakan", "hates_databases", Olympic.UserType.ORGANIZER);
         assert_(user_id > 0, "Creates a user id (" + user_id + ") for rakan");
         int deleted = Olympic.dropUser("rakan");
@@ -74,7 +75,7 @@ public class Driver {
                 "Deletes team member (participant id " + participant_id + ")");
     }
 
-    public static void displays() throws SQLException {
+    public static void testDisplays() throws SQLException {
         ArrayList<List<String>> res = Olympic.displaySport("400m");
         assert_(res.size() > 0, "Displays results for 400m");
         Olympic.CLI.prettyPrintResults(res);
@@ -99,11 +100,11 @@ public class Driver {
     public static void main(String[] args) {
         System.out.println("Starting tests, this does a lot of db reads/writes so be patient ... \n");
         try {
-//            testLoginLogout();
-//            testUserCreateDrop();
+            testLoginLogout();
             Olympic.login("guest", "GUEST");
-//            testTeamAndEvent();
-            displays();
+            testUserCreateDrop();
+            testTeamAndEvent();
+            testDisplays();
         } catch (SQLException e1) {
             System.out.println("SQL Error");
             while (e1 != null) {
