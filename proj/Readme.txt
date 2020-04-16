@@ -8,7 +8,7 @@ How to run the project
 3. Run `init.sql`
 4. `javac -cp lib/ojdbc7.jar src/*.java`
 
-(For Windows, `cp` variable needs to be in quotes)
+(For Windows, `cp` argument needs to be in quotes)
 
 To run Driver that runs Tests
 `java -cp lib/ojdbc7.jar:src/ Driver`
