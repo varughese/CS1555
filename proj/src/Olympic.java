@@ -291,6 +291,7 @@ public class Olympic {
         ResultSet rs = stmt.executeQuery();
         ArrayList<List<String>> results = new ArrayList<List<String>>(50);
         results.add(Arrays.asList("Sport", "Year Added", "Event ID", "Olympics", "Gender", "Team ID", "Name", "Country", "Medal"));
+        // TODO all of the rs.next() makes it skip!
         while(rs.next()) {
             results.add(Arrays.asList(
                     rs.getString("sport_name"),
