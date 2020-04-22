@@ -122,7 +122,10 @@ public class Olympic {
         if (loggedInUser == null) return -7;
         // I assume 'an Olympic game' means olympic_id. I have already shown with
         // the PROC_CREATE_TEAM procedure that I know how to find the olympic id given
-        // other details.
+        // other details. It was unclear to me what 'given an Olympic game' from the description
+        // is. If it is the olympic number, I would create a procedure like PROC_CREATE_TEAM
+        // and select olympic_id from OLYMPICS where olympic_num = ? and pass that into this
+        // sql statement I have below.
         Connection connection = startConnection();
         PreparedStatement stmt = connection.prepareStatement("INSERT INTO scoreboard values(?, ?, ?, ?, ?, null)");
         stmt.setInt(1, olympic_id);
@@ -160,6 +163,9 @@ public class Olympic {
         cs.setInt(5, sport_id);
         cs.setInt(6, coach_id);
         int updatedRows = cs.executeUpdate();
+
+        // TODO add coach ID to be a team member.
+        // TODO Also, wrap all 'select currval' with the transactions and do commits
 
         if (updatedRows <= 0) {
             System.out.println("Did not a matching olympics or country. Make sure you spelled those correctly.");
