@@ -58,6 +58,10 @@ CREATE TABLE PARTICIPANT(
     participant_id integer primary key not null,
     fname varchar2(30) not null,
     lname varchar2(30) not null,
+    -- nationality could potentially be be a FK to COUNTRY(country),
+    -- but it really is not used anywhere in the application so I did not do this
+    -- Nationality implies a word like 'Jamaican'
+    -- and country would be like 'Jamaica'
     nationality varchar2(20) not null,
     birth_place varchar2(40) not null,
     dob date not null

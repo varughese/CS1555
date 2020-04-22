@@ -40,12 +40,12 @@ public class Olympic {
 
      ********************************************************/
 
-    private static Connection startConnection() {
+    private static Connection startConnection(boolean autoCommit) {
         Connection connection = null;
         try {
             DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
             connection = DriverManager.getConnection(url, username, password);
-            connection.setAutoCommit(true);
+            connection.setAutoCommit(autoCommit);
             connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
         } catch (Exception e) {
             System.out.println(
@@ -54,6 +54,8 @@ public class Olympic {
         }
         return connection;
     }
+
+    private static Connection startConnection() { return startConnection(true); }
 
     /** Given a username, passkey, role id, add a new user to the system. The “last login” should be
      set with the creation date and time. Only organizers can add any kind of users to the system.*/
@@ -97,7 +99,7 @@ public class Olympic {
         if (gender != 'm' && gender != 'f') {
             gender  = 'f';
         }
-        Connection connection = startConnection();
+        Connection connection = startConnection(/*autoCommit=*/ false);
         PreparedStatement stmt = connection.prepareStatement("INSERT INTO event values(null, ?, ?, ?, ?)");
         stmt.setInt(1, sport_id);
         stmt.setInt(2, venue_id);
@@ -111,6 +113,7 @@ public class Olympic {
         if (rs.next()) {
             event_id = (int) rs.getLong(1);
         }
+        connection.commit();
         connection.close();
         return event_id;
     }
@@ -149,12 +152,15 @@ public class Olympic {
             int sport_id,
             int coach_id
     ) throws SQLException {
+        // "In @153 Brian said "For this query I discussed the issue with Dr. Costa and
+        // you can take the coach_id as an input parameter as the pdf is from an older
+        // version before the project was changed for individual projects"
         if (loggedInUser == null) return -7;
         if (loggedInUser.userType != UserType.COACH) {
             System.out.println("Only coaches can create a team.");
             return -3;
         }
-        Connection connection = startConnection();
+        Connection connection = startConnection(/*autoCommit=*/ false);
         CallableStatement cs = connection.prepareCall("{CALL PROC_CREATE_TEAM(?, ?, ?, ?, ?, ?)}");
         cs.setString(1, olympicCity);
         cs.setInt(2, year);
@@ -163,9 +169,6 @@ public class Olympic {
         cs.setInt(5, sport_id);
         cs.setInt(6, coach_id);
         int updatedRows = cs.executeUpdate();
-
-        // TODO add coach ID to be a team member.
-        // TODO Also, wrap all 'select currval' with the transactions and do commits
 
         if (updatedRows <= 0) {
             System.out.println("Did not a matching olympics or country. Make sure you spelled those correctly.");
@@ -177,6 +180,7 @@ public class Olympic {
         if (rs.next()) {
             team_id = (int) rs.getLong(1);
         }
+        connection.commit();
         connection.close();
         return team_id;
     }
@@ -196,7 +200,7 @@ public class Olympic {
     /** Given the first name, last name, nationality, birth place, dob, create participant. */
     public static int addParticipant(String firstname, String lastname, String nationality, String birthPlace, Date dob) throws SQLException {
         if (loggedInUser == null) return -7;
-        Connection connection = startConnection();
+        Connection connection = startConnection(/*autoCommit=*/ false);
         PreparedStatement stmt = connection.prepareStatement("INSERT INTO PARTICIPANT values(null, ?, ?, ?, ?, ?)");
         stmt.setString(1, firstname);
         stmt.setString(2, lastname);
@@ -212,6 +216,7 @@ public class Olympic {
         if (rs.next()) {
             participant_id = (int) rs.getLong(1);
         }
+        connection.commit();
         connection.close();
         return participant_id;
     }

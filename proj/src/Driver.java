@@ -80,8 +80,8 @@ public class Driver {
         assert_(res.size() > 0, "Displays results for 400m");
         Olympic.CLI.prettyPrintResults(res);
 
-        res = Olympic.displayEvent(213);
-        assert_(res.size() > 0, "Displays results for event id 213");
+        res = Olympic.displayEvent(3);
+        assert_(res.size() > 0, "Displays results for event id 3");
         Olympic.CLI.prettyPrintResults(res);
 
         res = Olympic.countryRanking(2);
