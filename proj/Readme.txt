@@ -19,4 +19,5 @@ To run Olympics CLI
 Or, you can open the `proj.iml` file in `IntelliJ`, and compile and run the programs that way!
 
 
-
+Or enter this command to compiler and run:
+`javac -cp lib/ojdbc7.jar src/*.java &&  java -cp lib/ojdbc7.jar:src/ Olympic`

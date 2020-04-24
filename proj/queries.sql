@@ -13,7 +13,7 @@ DELETE FROM USER_ACCOUNT WHERE username = 'rakan';
 -- 3. createEvent
 INSERT INTO EVENT values(null, 1, 4, 'm', '10-AUG-2012');
 
--- 4. addEventOutcome (Added this delete to make insertion example easier)
+-- 4. addEventOutcome (Have a delete before to make insertion example easier given all the FK constraints)
 DELETE  FROM SCOREBOARD WHERE OLYMPIC_ID = 3 AND EVENT_ID = 4 AND
                                 TEAM_ID = 1 AND PARTICIPANT_ID = 19 AND
                                 POSITION = 1;
@@ -22,7 +22,7 @@ INSERT INTO SCOREBOARD values(3, 4, 1, 19, 1, null);
 -- 5. createTeam
 CALL PROC_CREATE_TEAM('London', 2012, 'Team Test', 'USA', 3, 2);
 
--- 6. registerTeam (Added a delete to make insertion easier, not mess up the DB which too many fake values)
+-- 6. registerTeam
 INSERT INTO EVENT_PARTICIPATION values(EVENT_SEQUENCE.currval, team_sequence.currval, 'e');
 
 -- 7. addParticipant
@@ -34,7 +34,7 @@ INSERT INTO TEAM_MEMBER values(team_sequence.currval, PARTICIPANT_SEQUENCE.currv
 -- 9. dropTeamMember (Have to do this max participant id thing to delete what was created above)
 DELETE FROM PARTICIPANT WHERE PARTICIPANT_ID = (SELECT MAX(PARTICIPANT_ID) FROM PARTICIPANT);
 
--- 10. login
+-- 10. login (login code would require checking inputted username and passkey)
 SELECT user_id, role_id, last_login FROM USER_ACCOUNT WHERE username='Hu Jintao' AND passkey='Beijing';
 
 -- 11. displaySport
