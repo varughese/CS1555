@@ -469,7 +469,9 @@ ORDER BY OLYMPIC_ID, RANK;
 
 ------------------------------------------------------------
 -- 15. connectedAthletes
-SELECT PARTICIPANT_ID, FNAME FROM PARTICIPANT;
+-- My thought process was that since we know n < 3, we can create views to have the computation
+-- be faster. I do self joins between the participant and the team they are on to determine
+-- whether or not they are correct.
 
 CREATE OR REPLACE VIEW V_PARTICIPANT_EVENT_TEAM AS
 SELECT OLYMPIC_ID, TEAM_ID, PARTICIPANT_ID, FNAME || ' ' || LNAME AS NAME
